@@ -396,6 +396,7 @@
           <div class="sensor"><span>Water</span><strong id="water">--</strong></div>
           <div class="sensor"><span>Sound</span><strong id="sound">--</strong></div>
           <div class="sensor"><span>Potentiometer</span><strong id="potentiometer">--</strong></div>
+          <div class="sensor"><span>RGB Command</span><strong id="rgbStatus">--</strong></div>
         </div>
       </section>
 
@@ -428,12 +429,12 @@
       <section class="card">
         <h2>Manual Control</h2>
         <div class="grid manual">
-          <button class="control-btn" onclick="publish('ctrlhome/light/control', 'ON')">Light ON</button>
-          <button class="control-btn" onclick="publish('ctrlhome/light/control', 'OFF')">Light OFF</button>
-          <button class="control-btn" onclick="publish('ctrlhome/fan/control', 'ON')">Fan ON</button>
-          <button class="control-btn" onclick="publish('ctrlhome/fan/control', 'OFF')">Fan OFF</button>
-          <button class="control-btn" onclick="publish('ctrlhome/alarm/control', 'ON')">Alarm ON</button>
-          <button class="control-btn" onclick="publish('ctrlhome/alarm/control', 'OFF')">Alarm OFF</button>
+          <button class="control-btn" onclick="publish('ctrlhome/B6737115/light/control', 'ON')">Light ON</button>
+          <button class="control-btn" onclick="publish('ctrlhome/B6737115/light/control', 'OFF')">Light OFF</button>
+          <button class="control-btn" onclick="publish('ctrlhome/B6737115/fan/control', 'ON')">Fan ON</button>
+          <button class="control-btn" onclick="publish('ctrlhome/B6737115/fan/control', 'OFF')">Fan OFF</button>
+          <button class="control-btn" onclick="publish('ctrlhome/B6737115/alarm/control', 'ON')">Alarm ON</button>
+          <button class="control-btn" onclick="publish('ctrlhome/B6737115/alarm/control', 'OFF')">Alarm OFF</button>
         </div>
       </section>
     </section>
@@ -710,7 +711,7 @@
     }
 
     function setMode(mode, button) {
-      publish("ctrlhome/mode", mode);
+      publish("ctrlhome/B6737115/mode", mode);
       document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
       button.classList.add("active");
     }
@@ -739,13 +740,13 @@
     }
 
     function applyMood(mood) {
-      publish("ctrlhome/mode", "comfort");
-      publish("ctrlhome/custom/brightness", mood.brightness);
-      publish("ctrlhome/custom/rgb", hexToRgbPayload(mood.rgb));
-      publish("ctrlhome/custom/fan", mood.fan);
-      publish("ctrlhome/custom/curtain", mood.curtain);
-      publish("ctrlhome/custom/temp", mood.temp);
-      publish("ctrlhome/custom/alarm", mood.alarm);
+      publish("ctrlhome/B6737115/mode", "comfort");
+      publish("ctrlhome/B6737115/custom/brightness", mood.brightness);
+      publish("ctrlhome/B6737115/custom/rgb", hexToRgbPayload(mood.rgb));
+      publish("ctrlhome/B6737115/custom/fan", mood.fan);
+      publish("ctrlhome/B6737115/custom/curtain", mood.curtain);
+      publish("ctrlhome/B6737115/custom/temp", mood.temp);
+      publish("ctrlhome/B6737115/custom/alarm", mood.alarm);
     }
 
     function applyCurrentMood() {
@@ -827,7 +828,9 @@
     }
 
     function publishColor(hex) {
-      publish("ctrlhome/custom/rgb", hexToRgbPayload(hex));
+      const payload = hexToRgbPayload(hex);
+      document.getElementById("rgbStatus").textContent = payload;
+      publish("ctrlhome/B6737115/custom/rgb", payload);
     }
 
     loadSavedTheme();
