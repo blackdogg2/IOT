@@ -394,6 +394,8 @@
           <div class="sensor"><span>Motion</span><strong id="motion">--</strong></div>
           <div class="sensor"><span>Gas</span><strong id="gas">--</strong></div>
           <div class="sensor"><span>Water</span><strong id="water">--</strong></div>
+          <div class="sensor"><span>Sound</span><strong id="sound">--</strong></div>
+          <div class="sensor"><span>Potentiometer</span><strong id="potentiometer">--</strong></div>
         </div>
       </section>
 
@@ -555,10 +557,12 @@
     const topics = {
       temperature: "ctrlhome/B6737115/temperature",
       humidity: "ctrlhome/B6737115/humidity",
-      light: "ctrlhome/light",
-      motion: "ctrlhome/motion",
-      gas: "ctrlhome/gas",
-      water: "ctrlhome/water",
+      light: "ctrlhome/B6737115/light",
+      motion: "ctrlhome/B6737115/motion",
+      gas: "ctrlhome/B6737115/gas",
+      water: "ctrlhome/B6737115/water",
+      sound: "ctrlhome/B6737115/sound",
+      potentiometer: "ctrlhome/B6737115/potentiometer",
       alert: "ctrlhome/B6737115/alert",
       currentMode: "ctrlhome/B6737115/currentmode"
     };
@@ -690,6 +694,8 @@
         if (topic === topics.motion) document.getElementById("motion").textContent = message;
         if (topic === topics.gas) document.getElementById("gas").textContent = message;
         if (topic === topics.water) document.getElementById("water").textContent = message;
+        if (topic === topics.sound) document.getElementById("sound").textContent = message;
+        if (topic === topics.potentiometer) document.getElementById("potentiometer").textContent = message;
         if (topic === topics.alert) document.getElementById("alert").textContent = message;
       });
     }
