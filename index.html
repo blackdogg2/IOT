@@ -401,6 +401,12 @@
         <h2>Alert</h2>
         <div id="alert" class="alert">No alerts yet.</div>
       </section>
+
+      <section class="card">
+        <h2>MQTT Debug</h2>
+        <div id="debug" class="alert">Waiting for MQTT messages...</div>
+        <p class="small">If this stays empty after connecting, the app is not receiving MQTT messages.</p>
+      </section>
     </section>
 
     <section id="tab-control" class="tab-page">
@@ -547,14 +553,14 @@
     let client = null;
 
     const topics = {
-      temperature: "ctrlhome/temperature",
-      humidity: "ctrlhome/humidity",
+      temperature: "ctrlhome/B6737115/temperature",
+      humidity: "ctrlhome/B6737115/humidity",
       light: "ctrlhome/light",
       motion: "ctrlhome/motion",
       gas: "ctrlhome/gas",
       water: "ctrlhome/water",
-      alert: "ctrlhome/alert",
-      currentMode: "ctrlhome/currentmode"
+      alert: "ctrlhome/B6737115/alert",
+      currentMode: "ctrlhome/B6737115/currentmode"
     };
 
     const themes = {
@@ -657,6 +663,7 @@
 
       client.on("connect", () => {
         setStatus("Connected", true);
+        document.getElementById("debug").textContent = "Connected. Subscribed to private DHT topics.";
         Object.values(topics).forEach(topic => client.subscribe(topic));
       });
 
@@ -674,6 +681,8 @@
 
       client.on("message", (topic, payload) => {
         const message = payload.toString();
+
+        document.getElementById("debug").textContent = topic + " → " + message;
 
         if (topic === topics.temperature) document.getElementById("temp").textContent = message + " °C";
         if (topic === topics.humidity) document.getElementById("hum").textContent = message + " %";
