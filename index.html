@@ -265,8 +265,8 @@
           <div class="sensor"><span>LDR Light</span><strong id="light">--</strong></div>
           <div class="sensor"><span>Motion</span><strong id="motion">--</strong></div>
           <div class="sensor"><span>Gas</span><strong id="gas">--</strong></div>
-          <div class="sensor"><span>Water</span><strong id="water">--</strong></div>
-          <div class="sensor"><span>Sound</span><strong id="sound">--</strong></div>
+          <div class="sensor"><span>Water Tank</span><strong id="water">--</strong></div>
+          <div class="sensor"><span>Sound Level</span><strong id="sound">-- dB</strong></div>
           <div class="sensor"><span>Potentiometer</span><strong id="potentiometer">--</strong></div>
           <div class="sensor"><span>Current Mode</span><strong id="currentMode">--</strong></div>
           <div class="sensor"><span>MQTT Debug</span><strong id="debug">Waiting...</strong></div>
@@ -403,6 +403,7 @@
         <div class="settings">
           <input id="broker" type="text" value="wss://broker.hivemq.com:8884/mqtt" />
           <button class="connect-btn" onclick="connectMQTT()">Connect Controller</button>
+          <button class="control-btn" onclick="enableNotifications()">Enable Phone Alerts</button>
         </div>
         <p class="small">Use the same HiveMQ broker as the ESP32. The app uses WebSocket MQTT.</p>
       </section>
@@ -564,6 +565,45 @@
       }
     }
 
+
+    let lastPhoneAlert = "";
+    let lastPhoneAlertTime = 0;
+
+    function enableNotifications() {
+      if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+          document.getElementById("debug").textContent = permission === "granted" ? "Phone alerts enabled" : "Phone alerts blocked";
+        });
+      } else {
+        document.getElementById("debug").textContent = "Browser notification not supported";
+      }
+
+      if ("vibrate" in navigator) {
+        navigator.vibrate(120);
+      }
+    }
+
+    function phoneAlert(message) {
+      const now = Date.now();
+
+      if (message === lastPhoneAlert && now - lastPhoneAlertTime < 8000) {
+        return;
+      }
+
+      lastPhoneAlert = message;
+      lastPhoneAlertTime = now;
+
+      if ("vibrate" in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Ctrl+Home Alert", {
+          body: message
+        });
+      }
+    }
+
     function connectMQTT() {
       const brokerUrl = document.getElementById("broker").value.trim();
       const clientId = "ctrlhome_phone_" + Math.random().toString(16).slice(2, 10);
@@ -604,7 +644,12 @@
         if (topic === T.sound) document.getElementById("sound").textContent = message;
         if (topic === T.potentiometer) document.getElementById("potentiometer").textContent = message;
         if (topic === T.currentMode) document.getElementById("currentMode").textContent = message;
-        if (topic === T.alert) document.getElementById("alert").textContent = message;
+        if (topic === T.alert) {
+          document.getElementById("alert").textContent = message;
+          if (message !== "All sensors normal" && message !== "No alerts yet.") {
+            phoneAlert(message);
+          }
+        }
 
         if (topic === T.statusLight) document.getElementById("statusLight").textContent = message;
         if (topic === T.statusFan) document.getElementById("statusFan").textContent = message;
