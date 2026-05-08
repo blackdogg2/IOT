@@ -266,10 +266,8 @@
           <div class="sensor"><span>Motion</span><strong id="motion">--</strong></div>
           <div class="sensor"><span>Gas</span><strong id="gas">--</strong></div>
           <div class="sensor"><span>Water Tank</span><strong id="water">--</strong></div>
-          <div class="sensor"><span>Sound Level</span><strong id="sound">-- dB</strong></div>
           <div class="sensor"><span>Potentiometer</span><strong id="potentiometer">--</strong></div>
           <div class="sensor"><span>Current Mode</span><strong id="currentMode">--</strong></div>
-          <div class="sensor"><span>MQTT Debug</span><strong id="debug">Waiting...</strong></div>
         </div>
       </section>
 
@@ -458,7 +456,6 @@
       motion: BASE + "/motion",
       gas: BASE + "/gas",
       water: BASE + "/water",
-      sound: BASE + "/sound",
       potentiometer: BASE + "/potentiometer",
       alert: BASE + "/alert",
       currentMode: BASE + "/currentmode",
@@ -571,11 +568,8 @@
 
     function enableNotifications() {
       if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-          document.getElementById("debug").textContent = permission === "granted" ? "Phone alerts enabled" : "Phone alerts blocked";
-        });
+        Notification.requestPermission();
       } else {
-        document.getElementById("debug").textContent = "Browser notification not supported";
       }
 
       if ("vibrate" in navigator) {
@@ -619,10 +613,8 @@
 
       client.on("connect", () => {
         setStatus("Connected", true);
-        document.getElementById("debug").textContent = "Connected";
         [
-          T.temperature, T.humidity, T.light, T.motion, T.gas, T.water, T.sound,
-          T.potentiometer, T.alert, T.currentMode,
+          T.temperature, T.humidity, T.light, T.motion, T.gas, T.water, T.potentiometer, T.alert, T.currentMode,
           T.statusLight, T.statusFan, T.statusCurtain, T.statusRGB, T.statusAlarm
         ].forEach(topic => client.subscribe(topic));
       });
@@ -633,7 +625,6 @@
 
       client.on("message", (topic, payload) => {
         const message = payload.toString();
-        document.getElementById("debug").textContent = topic.replace(BASE + "/", "") + " → " + message;
 
         if (topic === T.temperature) document.getElementById("temp").textContent = message + " °C";
         if (topic === T.humidity) document.getElementById("hum").textContent = message + " %";
@@ -641,7 +632,6 @@
         if (topic === T.motion) document.getElementById("motion").textContent = message;
         if (topic === T.gas) document.getElementById("gas").textContent = message;
         if (topic === T.water) document.getElementById("water").textContent = message;
-        if (topic === T.sound) document.getElementById("sound").textContent = message;
         if (topic === T.potentiometer) document.getElementById("potentiometer").textContent = message;
         if (topic === T.currentMode) document.getElementById("currentMode").textContent = message;
         if (topic === T.alert) {
