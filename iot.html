@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ctrl+Home Controller</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    :root {
+      --primary: #ef4444;
+      --primary-dark: #991b1b;
+      --primary-soft: rgba(239, 68, 68, 0.28);
+      --primary-glow: rgba(239, 68, 68, 0.28);
+      --primary-alert: rgba(239, 68, 68, 0.12);
+      --primary-alert-border: rgba(239, 68, 68, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: #0b0b0f;
+      color: #f5f5f5;
+    }
+
+    .phone {
+      max-width: 430px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 18px 16px 90px;
+      background:
+        radial-gradient(circle at top left, var(--primary-soft), transparent 36%),
+        radial-gradient(circle at top right, rgba(255,255,255,0.08), transparent 34%),
+        #0b0b0f;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: -0.8px;
+    }
+
+    .title p {
+      margin: 5px 0 0;
+      color: #a7a7b0;
+      font-size: 14px;
+    }
+
+    .status {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--primary);
+      white-space: nowrap;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .status.connected {
+      color: #86efac;
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .tab-page {
+      display: none;
+    }
+
+    .tab-page.active {
+      display: block;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.075);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 26px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(16px);
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 17px;
+      letter-spacing: -0.2px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mode-btn,
+    .control-btn {
+      border: 0;
+      border-radius: 20px;
+      padding: 16px 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: 0.18s ease;
+    }
+
+    .mode-btn:active,
+    .control-btn:active,
+    .nav-btn:active {
+      transform: scale(0.97);
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      box-shadow: 0 14px 34px var(--primary-glow);
+    }
+
+    .emergency {
+      grid-column: span 2;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    }
+
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .sensor {
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.065);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .sensor span {
+      display: block;
+      color: #a7a7b0;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .sensor strong {
+      font-size: 20px;
+      letter-spacing: -0.4px;
+    }
+
+    .row {
+      margin: 15px 0;
+    }
+
+    .row label {
+      display: flex;
+      justify-content: space-between;
+      color: #d4d4d8;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 46px;
+      border: 0;
+      border-radius: 16px;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      border-radius: 16px;
+      padding: 13px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    option {
+      background: #171717;
+      color: white;
+    }
+
+    .manual {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .alert {
+      min-height: 44px;
+      padding: 12px;
+      border-radius: 18px;
+      background: var(--primary-alert);
+      color: #fecaca;
+      border: 1px solid var(--primary-alert-border);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .settings {
+      display: grid;
+      gap: 10px;
+    }
+
+    .small {
+      color: #a7a7b0;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .connect-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .theme-dot {
+      height: 44px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      background: #333;
+    }
+
+    .theme-dot.active-theme {
+      border-color: white;
+      transform: scale(0.96);
+    }
+
+    .theme-red { background: linear-gradient(135deg, #ef4444, #991b1b); }
+    .theme-blue { background: linear-gradient(135deg, #3b82f6, #1e3a8a); }
+    .theme-green { background: linear-gradient(135deg, #22c55e, #14532d); }
+    .theme-purple { background: linear-gradient(135deg, #a855f7, #581c87); }
+    .theme-orange { background: linear-gradient(135deg, #f97316, #7c2d12); }
+    .theme-pink { background: linear-gradient(135deg, #ec4899, #831843); }
+    .theme-cyan { background: linear-gradient(135deg, #06b6d4, #164e63); }
+    .theme-white { background: linear-gradient(135deg, #f8fafc, #71717a); }
+
+    .theme-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      padding: 10px 14px 14px;
+      background: linear-gradient(to top, rgba(11,11,15,0.98), rgba(11,11,15,0.85));
+      backdrop-filter: blur(14px);
+    }
+
+    .nav-wrap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 8px;
+    }
+
+    .nav-btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 8px;
+      background: transparent;
+      color: #cfcfd6;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 10px 24px var(--primary-glow);
+    }
+
+    .footer {
+      color: #71717a;
+      text-align: center;
+      font-size: 12px;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <section class="top">
+      <div class="title">
+        <h1>Ctrl+Home</h1>
+        <p>Command Your Comfort</p>
+      </div>
+      <div id="status" class="status">Disconnected</div>
+    </section>
+
+    <section id="tab-home" class="tab-page active">
+      <section class="card">
+        <h2>Live Home Status</h2>
+        <div class="sensor-grid">
+          <div class="sensor"><span>Temperature</span><strong id="temp">-- °C</strong></div>
+          <div class="sensor"><span>Humidity</span><strong id="hum">-- %</strong></div>
+          <div class="sensor"><span>Light</span><strong id="light">--</strong></div>
+          <div class="sensor"><span>Motion</span><strong id="motion">--</strong></div>
+          <div class="sensor"><span>Gas</span><strong id="gas">--</strong></div>
+          <div class="sensor"><span>Water</span><strong id="water">--</strong></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Alert</h2>
+        <div id="alert" class="alert">No alerts yet.</div>
+      </section>
+    </section>
+
+    <section id="tab-control" class="tab-page">
+      <section class="card">
+        <h2>Smart Modes</h2>
+        <div class="grid">
+          <button class="mode-btn" onclick="setMode('sleep', this)">Sleep</button>
+          <button class="mode-btn" onclick="setMode('study', this)">Study</button>
+          <button class="mode-btn" onclick="setMode('relax', this)">Relax</button>
+          <button class="mode-btn" onclick="setMode('away', this)">Away</button>
+          <button class="mode-btn" onclick="setMode('energy', this)">Energy Save</button>
+          <button class="mode-btn" onclick="setMode('comfort', this)">My Comfort</button>
+          <button class="mode-btn emergency" onclick="setMode('emergency', this)">Emergency Mode</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Manual Control</h2>
+        <div class="grid manual">
+          <button class="control-btn" onclick="publish('ctrlhome/light/control', 'ON')">Light ON</button>
+          <button class="control-btn" onclick="publish('ctrlhome/light/control', 'OFF')">Light OFF</button>
+          <button class="control-btn" onclick="publish('ctrlhome/fan/control', 'ON')">Fan ON</button>
+          <button class="control-btn" onclick="publish('ctrlhome/fan/control', 'OFF')">Fan OFF</button>
+          <button class="control-btn" onclick="publish('ctrlhome/alarm/control', 'ON')">Alarm ON</button>
+          <button class="control-btn" onclick="publish('ctrlhome/alarm/control', 'OFF')">Alarm OFF</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-comfort" class="tab-page">
+      <section class="card">
+        <h2>My Comfort Mode</h2>
+
+        <div class="row">
+          <label>Brightness <span id="brightnessValue">150</span></label>
+          <input id="brightness" type="range" min="0" max="255" value="150" oninput="publishRange('ctrlhome/custom/brightness', this.value, 'brightnessValue')" />
+        </div>
+
+        <div class="row">
+          <label>RGB Mood Color</label>
+          <input id="rgb" type="color" value="#ef4444" onchange="publishColor(this.value)" />
+        </div>
+
+        <div class="row">
+          <label>Fan Speed</label>
+          <select onchange="publish('ctrlhome/custom/fan', this.value)">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Curtain Position <span id="curtainValue">90</span></label>
+          <input id="curtain" type="range" min="0" max="180" value="90" oninput="publishRange('ctrlhome/custom/curtain', this.value, 'curtainValue')" />
+        </div>
+
+        <div class="row">
+          <label>Preferred Temperature <span id="tempValue">25</span> °C</label>
+          <input id="targetTemp" type="range" min="18" max="35" value="25" oninput="publishRange('ctrlhome/custom/temp', this.value, 'tempValue')" />
+        </div>
+
+        <div class="grid">
+          <button class="control-btn" onclick="publish('ctrlhome/custom/alarm', 'ON')">Alarm Enable</button>
+          <button class="control-btn" onclick="publish('ctrlhome/custom/alarm', 'OFF')">Alarm Disable</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-settings" class="tab-page">
+      <section class="card">
+        <h2>Connection</h2>
+        <div class="settings">
+          <input id="broker" type="text" value="wss://broker.hivemq.com:8884/mqtt" />
+          <button class="connect-btn" onclick="connectMQTT()">Connect Controller</button>
+        </div>
+        <p class="small">Your ESP32 should use the same MQTT broker and the same Ctrl+Home topics.</p>
+      </section>
+
+      <section class="card">
+        <h2>Theme Settings</h2>
+        <p class="small">Choose a controller color theme. It will be saved on this phone.</p>
+
+        <div class="theme-grid">
+          <button class="theme-dot theme-red active-theme" onclick="setTheme('red', this)" aria-label="Red theme"></button>
+          <button class="theme-dot theme-blue" onclick="setTheme('blue', this)" aria-label="Blue theme"></button>
+          <button class="theme-dot theme-green" onclick="setTheme('green', this)" aria-label="Green theme"></button>
+          <button class="theme-dot theme-purple" onclick="setTheme('purple', this)" aria-label="Purple theme"></button>
+          <button class="theme-dot theme-orange" onclick="setTheme('orange', this)" aria-label="Orange theme"></button>
+          <button class="theme-dot theme-pink" onclick="setTheme('pink', this)" aria-label="Pink theme"></button>
+          <button class="theme-dot theme-cyan" onclick="setTheme('cyan', this)" aria-label="Cyan theme"></button>
+          <button class="theme-dot theme-white" onclick="setTheme('white', this)" aria-label="White theme"></button>
+        </div>
+
+        <div class="row">
+          <label>Custom Theme Color</label>
+          <input id="themePicker" type="color" value="#ef4444" onchange="setCustomTheme(this.value)" />
+        </div>
+
+        <div class="theme-actions">
+          <button class="control-btn" onclick="setTheme('dark', null)">Dark</button>
+          <button class="control-btn" onclick="setTheme('red', document.querySelector('.theme-red'))">Reset Red</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>About</h2>
+        <p class="small">Ctrl+Home Mobile Controller with tabs for Home, Control, My Comfort, and Settings.</p>
+      </section>
+    </section>
+
+    <div class="footer">Ctrl+Home Mobile Controller</div>
+  </main>
+
+  <nav class="bottom-nav">
+    <div class="nav-wrap">
+      <button class="nav-btn active" onclick="showTab('home', this)">Home</button>
+      <button class="nav-btn" onclick="showTab('control', this)">Control</button>
+      <button class="nav-btn" onclick="showTab('comfort', this)">Comfort</button>
+      <button class="nav-btn" onclick="showTab('settings', this)">Settings</button>
+    </div>
+  </nav>
+
+  <script>
+    let client = null;
+
+    const topics = {
+      temperature: "ctrlhome/temperature",
+      humidity: "ctrlhome/humidity",
+      light: "ctrlhome/light",
+      motion: "ctrlhome/motion",
+      gas: "ctrlhome/gas",
+      water: "ctrlhome/water",
+      alert: "ctrlhome/alert",
+      currentMode: "ctrlhome/currentmode"
+    };
+
+    const themes = {
+      red: ["#ef4444", "#991b1b"],
+      blue: ["#3b82f6", "#1e3a8a"],
+      green: ["#22c55e", "#14532d"],
+      purple: ["#a855f7", "#581c87"],
+      orange: ["#f97316", "#7c2d12"],
+      pink: ["#ec4899", "#831843"],
+      cyan: ["#06b6d4", "#164e63"],
+      white: ["#f8fafc", "#71717a"],
+      dark: ["#52525b", "#18181b"]
+    };
+
+    function showTab(name, button) {
+      document.querySelectorAll(".tab-page").forEach(tab => tab.classList.remove("active"));
+      document.getElementById("tab-" + name).classList.add("active");
+
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
+    }
+
+    function setStatus(text, connected) {
+      const status = document.getElementById("status");
+      status.textContent = text;
+      status.classList.toggle("connected", connected);
+    }
+
+    function hexToRgba(hex, alpha) {
+      const clean = hex.replace("#", "");
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function darkenHex(hex, percent = 45) {
+      const clean = hex.replace("#", "");
+      let r = parseInt(clean.substring(0, 2), 16);
+      let g = parseInt(clean.substring(2, 4), 16);
+      let b = parseInt(clean.substring(4, 6), 16);
+
+      r = Math.max(0, Math.round(r * (1 - percent / 100)));
+      g = Math.max(0, Math.round(g * (1 - percent / 100)));
+      b = Math.max(0, Math.round(b * (1 - percent / 100)));
+
+      return "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("");
+    }
+
+    function applyTheme(primary, dark) {
+      document.documentElement.style.setProperty("--primary", primary);
+      document.documentElement.style.setProperty("--primary-dark", dark);
+      document.documentElement.style.setProperty("--primary-soft", hexToRgba(primary, 0.28));
+      document.documentElement.style.setProperty("--primary-glow", hexToRgba(primary, 0.28));
+      document.documentElement.style.setProperty("--primary-alert", hexToRgba(primary, 0.12));
+      document.documentElement.style.setProperty("--primary-alert-border", hexToRgba(primary, 0.22));
+      document.getElementById("themePicker").value = primary;
+    }
+
+    function setTheme(name, button) {
+      const selected = themes[name] || themes.red;
+      applyTheme(selected[0], selected[1]);
+      localStorage.setItem("ctrlhome_theme", JSON.stringify({ primary: selected[0], dark: selected[1] }));
+
+      document.querySelectorAll(".theme-dot").forEach(btn => btn.classList.remove("active-theme"));
+      if (button) button.classList.add("active-theme");
+    }
+
+    function setCustomTheme(hex) {
+      const dark = darkenHex(hex);
+      applyTheme(hex, dark);
+      localStorage.setItem("ctrlhome_theme", JSON.stringify({ primary: hex, dark }));
+      document.querySelectorAll(".theme-dot").forEach(btn => btn.classList.remove("active-theme"));
+    }
+
+    function loadSavedTheme() {
+      const saved = localStorage.getItem("ctrlhome_theme");
+      if (!saved) return;
+
+      try {
+        const theme = JSON.parse(saved);
+        applyTheme(theme.primary, theme.dark);
+      } catch (error) {
+        applyTheme("#ef4444", "#991b1b");
+      }
+    }
+
+    function connectMQTT() {
+      const brokerUrl = document.getElementById("broker").value.trim();
+      const clientId = "ctrlhome_phone_" + Math.random().toString(16).slice(2, 10);
+
+      setStatus("Connecting...", false);
+
+      client = mqtt.connect(brokerUrl, {
+        clientId,
+        clean: true,
+        connectTimeout: 5000,
+        reconnectPeriod: 2000
+      });
+
+      client.on("connect", () => {
+        setStatus("Connected", true);
+        Object.values(topics).forEach(topic => client.subscribe(topic));
+      });
+
+      client.on("reconnect", () => {
+        setStatus("Reconnecting...", false);
+      });
+
+      client.on("error", () => {
+        setStatus("Error", false);
+      });
+
+      client.on("offline", () => {
+        setStatus("Offline", false);
+      });
+
+      client.on("message", (topic, payload) => {
+        const message = payload.toString();
+
+        if (topic === topics.temperature) document.getElementById("temp").textContent = message + " °C";
+        if (topic === topics.humidity) document.getElementById("hum").textContent = message + " %";
+        if (topic === topics.light) document.getElementById("light").textContent = message;
+        if (topic === topics.motion) document.getElementById("motion").textContent = message;
+        if (topic === topics.gas) document.getElementById("gas").textContent = message;
+        if (topic === topics.water) document.getElementById("water").textContent = message;
+        if (topic === topics.alert) document.getElementById("alert").textContent = message;
+      });
+    }
+
+    function publish(topic, message) {
+      if (!client || !client.connected) {
+        setStatus("Not connected", false);
+        return;
+      }
+
+      client.publish(topic, String(message));
+    }
+
+    function setMode(mode, button) {
+      publish("ctrlhome/mode", mode);
+      document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
+    }
+
+    function publishRange(topic, value, displayId) {
+      document.getElementById(displayId).textContent = value;
+      publish(topic, value);
+    }
+
+    function publishColor(hex) {
+      const r = parseInt(hex.substring(1, 3), 16);
+      const g = parseInt(hex.substring(3, 5), 16);
+      const b = parseInt(hex.substring(5, 7), 16);
+      publish("ctrlhome/custom/rgb", `${r},${g},${b}`);
+    }
+
+    loadSavedTheme();
+  </script>
+</body>
+</html>
