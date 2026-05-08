@@ -268,8 +268,6 @@
           <div class="sensor"><span>Water Tank</span><strong id="water">--</strong></div>
           <div class="sensor"><span>Potentiometer</span><strong id="potentiometer">--</strong></div>
           <div class="sensor"><span>Current Mode</span><strong id="currentMode">--</strong></div>
-          <div class="sensor"><span>Door Status</span><strong id="doorStatus">--</strong></div>
-          <div class="sensor"><span>Last RFID</span><strong id="rfidStatus">--</strong></div>
         </div>
       </section>
 
@@ -461,8 +459,6 @@
       potentiometer: BASE + "/potentiometer",
       alert: BASE + "/alert",
       currentMode: BASE + "/currentmode",
-      door: BASE + "/door",
-      rfid: BASE + "/rfid",
 
       mode: BASE + "/mode",
       lightControl: BASE + "/light/control",
@@ -638,8 +634,6 @@
         if (topic === T.water) document.getElementById("water").textContent = message;
         if (topic === T.potentiometer) document.getElementById("potentiometer").textContent = message;
         if (topic === T.currentMode) document.getElementById("currentMode").textContent = message;
-        if (topic === T.door) document.getElementById("doorStatus").textContent = message;
-        if (topic === T.rfid) document.getElementById("rfidStatus").textContent = message;
         if (topic === T.alert) {
           document.getElementById("alert").textContent = message;
           if (message !== "All sensors normal" && message !== "No alerts yet.") {
