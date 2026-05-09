@@ -2,451 +2,1367 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ctrl+Home Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ctrl+Home</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
   <style>
     :root {
-      --primary: #ef4444;
-      --primary-dark: #991b1b;
-      --primary-soft: rgba(239, 68, 68, 0.28);
-      --primary-glow: rgba(239, 68, 68, 0.28);
-      --primary-alert: rgba(239, 68, 68, 0.12);
-      --primary-alert-border: rgba(239, 68, 68, 0.22);
+      --bg: #f3f4f6;
+      --top-bg: #ffffff;
+      --surface: #ffffff;
+      --surface-2: #f9fafb;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #dc2626;
+      --accent-soft: #fee2e2;
+      --dark: #171923;
+      --green: #16a34a;
+      --yellow: #ca8a04;
+      --red: #dc2626;
+      --blue: #2563eb;
+      --purple: #9333ea;
+      --orange: #ea580c;
+      --shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+      --radius: 20px;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body.dark-theme {
+      --bg: #0f1117;
+      --top-bg: #12151d;
+      --surface: #171a23;
+      --surface-2: #202532;
+      --text: #f9fafb;
+      --muted: #a6adbb;
+      --line: #2a3040;
+      --accent-soft: rgba(220, 38, 38, 0.18);
+      --dark: #06070b;
+      --shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: #0b0b0f;
-      color: #f5f5f5;
-    }
-
-    .phone {
-      max-width: 430px;
       min-height: 100vh;
-      margin: 0 auto;
-      padding: 18px 16px 90px;
       background:
-        radial-gradient(circle at top left, var(--primary-soft), transparent 36%),
-        radial-gradient(circle at top right, rgba(255,255,255,0.08), transparent 34%),
-        #0b0b0f;
+        radial-gradient(circle at top right, rgba(220, 38, 38, 0.10), transparent 260px),
+        linear-gradient(180deg, var(--top-bg) 0%, var(--bg) 260px);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      padding-bottom: 92px;
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .top {
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .app {
+      width: min(100%, 520px);
+      margin: 0 auto;
+      padding: max(16px, env(safe-area-inset-top)) 14px 26px;
+    }
+
+    .topbar {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: flex-start;
       gap: 12px;
       margin-bottom: 16px;
     }
 
-    .title h1 { margin: 0; font-size: 30px; letter-spacing: -0.8px; }
-    .title p { margin: 5px 0 0; color: #a7a7b0; font-size: 14px; }
-
-    .status {
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--primary);
-      white-space: nowrap;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
     }
 
-    .status.connected {
-      color: #86efac;
-      background: rgba(34, 197, 94, 0.1);
-      border-color: rgba(34, 197, 94, 0.25);
-    }
-
-    .tab-page { display: none; }
-    .tab-page.active { display: block; }
-
-    .card {
-      background: rgba(255, 255, 255, 0.075);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      border-radius: 26px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.22);
-      backdrop-filter: blur(16px);
-    }
-
-    .card h2 { margin: 0 0 14px; font-size: 17px; letter-spacing: -0.2px; }
-
-    .grid, .sensor-grid, .theme-grid, .mood-actions, .theme-actions {
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
       display: grid;
-      gap: 10px;
+      place-items: center;
+      box-shadow: 0 10px 18px rgba(17, 24, 39, 0.16);
+      overflow: hidden;
+      background: #171923;
+      flex: 0 0 auto;
     }
 
-    .grid { grid-template-columns: repeat(2, 1fr); }
-    .sensor-grid { grid-template-columns: repeat(2, 1fr); }
-    .theme-grid { grid-template-columns: repeat(4, 1fr); margin-top: 10px; }
-    .mood-actions, .theme-actions { grid-template-columns: 1fr 1fr; margin-top: 12px; }
-
-    .mode-btn, .control-btn, .connect-btn {
-      border: 0;
-      border-radius: 20px;
-      padding: 16px 12px;
-      background: rgba(255, 255, 255, 0.08);
-      color: white;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: 0.18s ease;
-    }
-
-    .mode-btn:active, .control-btn:active, .nav-btn:active { transform: scale(0.97); }
-
-    .mode-btn.active, .connect-btn {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      box-shadow: 0 14px 34px var(--primary-glow);
-    }
-
-    .emergency {
-      grid-column: span 2;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    }
-
-    .sensor {
-      padding: 14px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.065);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .sensor span { display: block; color: #a7a7b0; font-size: 12px; margin-bottom: 8px; }
-    .sensor strong { font-size: 18px; letter-spacing: -0.4px; overflow-wrap: anywhere; }
-
-    .row { margin: 15px 0; }
-    .row label { display: flex; justify-content: space-between; color: #d4d4d8; font-size: 14px; margin-bottom: 10px; }
-
-    input[type="range"] { width: 100%; accent-color: var(--primary); }
-    input[type="color"] { width: 100%; height: 46px; border: 0; border-radius: 16px; background: transparent; overflow: hidden; }
-
-    select, input[type="text"] {
+    .logo svg {
       width: 100%;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.08);
+      height: 100%;
+      display: block;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.05;
+      letter-spacing: -0.7px;
+    }
+
+    .brand-text p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .connect-pill {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      border-radius: 999px;
+      min-height: 40px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .connect-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .connect-dot.online {
+      background: var(--green);
+    }
+
+    .hero {
+      background: var(--dark);
       color: white;
-      border-radius: 16px;
-      padding: 13px;
-      outline: none;
-      font-size: 14px;
+      border-radius: 28px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+      position: relative;
+      transition: background 0.2s ease;
     }
 
-    option { background: #171717; color: white; }
-
-    .alert {
-      min-height: 44px;
-      padding: 12px;
-      border-radius: 18px;
-      background: var(--primary-alert);
-      color: #fecaca;
-      border: 1px solid var(--primary-alert-border);
-      font-size: 14px;
-      line-height: 1.4;
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--accent) 35%, transparent);
     }
 
-    .settings { display: grid; gap: 10px; }
-    .small { color: #a7a7b0; font-size: 12px; line-height: 1.5; margin-top: 8px; }
-
-    .theme-dot {
-      height: 44px;
-      border: 2px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      cursor: pointer;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-      background: #333;
+    .hero-main {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
     }
 
-    .theme-dot.active-theme { border-color: white; transform: scale(0.96); }
-    .theme-red { background: linear-gradient(135deg, #ef4444, #991b1b); }
-    .theme-blue { background: linear-gradient(135deg, #3b82f6, #1e3a8a); }
-    .theme-green { background: linear-gradient(135deg, #22c55e, #14532d); }
-    .theme-purple { background: linear-gradient(135deg, #a855f7, #581c87); }
-    .theme-orange { background: linear-gradient(135deg, #f97316, #7c2d12); }
-    .theme-pink { background: linear-gradient(135deg, #ec4899, #831843); }
-    .theme-cyan { background: linear-gradient(135deg, #06b6d4, #164e63); }
-    .theme-white { background: linear-gradient(135deg, #f8fafc, #71717a); }
+    .eyebrow {
+      color: rgba(255,255,255,0.64);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
 
-    .mood-list { display: grid; gap: 10px; margin-top: 12px; }
-
-    .mood-card {
-      display: grid;
-      grid-template-columns: 1fr auto;
+    .current-mode {
+      margin-top: 8px;
+      display: flex;
       align-items: center;
       gap: 10px;
-      padding: 12px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -1.3px;
     }
 
-    .mood-card strong { display: block; font-size: 15px; margin-bottom: 4px; }
-    .mood-card span { display: block; color: #a7a7b0; font-size: 12px; line-height: 1.4; }
-
-    .mood-card button {
-      border: 0;
+    .mode-dot {
+      width: 38px;
+      height: 38px;
       border-radius: 14px;
-      padding: 10px 12px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      font-weight: 800;
-      cursor: pointer;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.14);
+      flex: 0 0 auto;
     }
 
-    .delete-btn { background: rgba(255, 255, 255, 0.08) !important; color: #fca5a5 !important; margin-top: 6px; }
+    .mode-dot svg {
+      width: 23px;
+      height: 23px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .climate {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 12px;
+      min-width: 100px;
+      text-align: right;
+    }
+
+    .climate strong {
+      display: block;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .climate span {
+      display: block;
+      margin-top: 5px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.68);
+      font-weight: 700;
+    }
+
+    .alert-card {
+      position: relative;
+      z-index: 1;
+      margin-top: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 13px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.92);
+      font-weight: 650;
+    }
+
+    .quick-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .quick {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 13px 10px;
+      min-height: 78px;
+      text-align: left;
+      box-shadow: 0 8px 18px rgba(17,24,39,0.05);
+      color: var(--text);
+    }
+
+    .quick .quick-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 8px;
+    }
+
+    .quick .quick-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .quick strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .quick span {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    .quick.study .quick-icon { background: rgba(37,99,235,0.13); color: var(--blue); }
+    .quick.energy .quick-icon { background: rgba(22,163,74,0.13); color: var(--green); }
+    .quick.emergency { background: color-mix(in srgb, var(--red) 7%, var(--surface)); border-color: rgba(220,38,38,0.30); }
+    .quick.emergency .quick-icon { background: rgba(220,38,38,0.13); color: var(--red); }
+
+    .section {
+      margin-top: 20px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 0 3px 10px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+    }
+
+    .section-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 18px rgba(17,24,39,0.045);
+    }
+
+    .tile {
+      padding: 14px;
+      min-height: 94px;
+    }
+
+    .tile-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .tile-value {
+      font-size: 19px;
+      line-height: 1.22;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .wide {
+      grid-column: 1 / -1;
+    }
+
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mode-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 19px;
+      min-height: 86px;
+      padding: 13px;
+      text-align: left;
+      box-shadow: 0 8px 18px rgba(17,24,39,0.045);
+    }
+
+    .mode-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 8px;
+      color: var(--mode-color);
+      background: color-mix(in srgb, var(--mode-color) 14%, transparent);
+    }
+
+    .mode-icon svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .mode-btn strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .mode-btn span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .mode-btn.active {
+      background: color-mix(in srgb, var(--mode-color) 11%, var(--surface));
+      border-color: color-mix(in srgb, var(--mode-color) 42%, var(--line));
+    }
+
+    .mode-btn.active strong {
+      color: var(--mode-color);
+    }
+
+    .control-card {
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .control-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .control-head h3 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: -0.2px;
+    }
+
+    .control-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .btn-grid.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      border-radius: 14px;
+      min-height: 46px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn.dark {
+      background: var(--dark);
+      border-color: var(--dark);
+      color: white;
+    }
+
+    .btn.danger {
+      background: var(--red);
+      border-color: var(--red);
+      color: white;
+    }
+
+    .btn.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.18);
+    }
+
+    .btn.danger.selected {
+      background: var(--red);
+      border-color: var(--red);
+      color: white;
+    }
+
+
+    .range-wrap {
+      display: grid;
+      grid-template-columns: 1fr 60px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .value-pill {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      border-radius: 13px;
+      padding: 8px 6px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .led-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .led {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      border-radius: 14px;
+      min-height: 48px;
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--text);
+    }
+
+    .led.on.red {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+
+    .led.on.green {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #166534;
+    }
+
+    .led.on.yellow {
+      background: #fef9c3;
+      border-color: #eab308;
+      color: #854d0e;
+    }
+
+    .field {
+      margin-bottom: 13px;
+    }
+
+    .field label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 14px;
+      min-height: 46px;
+      padding: 11px 12px;
+      outline: none;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .settings-row:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .settings-row:last-child {
+      padding-bottom: 0;
+    }
+
+    .settings-row strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .settings-row span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .switch {
+      width: 54px;
+      height: 31px;
+      border-radius: 999px;
+      border: 0;
+      background: #cbd5e1;
+      padding: 3px;
+      display: block;
+      position: relative;
+      transition: background 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .switch::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      transition: transform 0.2s ease;
+    }
+
+    .switch.on {
+      background: var(--accent);
+    }
+
+    .switch.on::before {
+      transform: translateX(23px);
+    }
+
+    .theme-toggle {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .theme-option {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      min-height: 44px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .theme-option.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .logo-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+    }
+
+    .logo-choice {
+      border: 2px solid var(--line);
+      background: var(--surface-2);
+      border-radius: 18px;
+      padding: 7px;
+      min-height: 76px;
+      display: grid;
+      place-items: center;
+    }
+
+    .logo-choice.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .logo-choice svg {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: block;
+    }
+
+    .mood-list .saved {
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .saved-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .saved-title strong {
+      font-size: 15px;
+    }
+
+    .saved-title span,
+    .saved p {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 0;
+      font-weight: 650;
+    }
+
+    .saved .btn-grid {
+      margin-top: 12px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+      animation: fadeIn 0.18s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .bottom-nav {
       position: fixed;
-      bottom: 0;
       left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom));
       transform: translateX(-50%);
-      width: 100%;
-      max-width: 430px;
-      padding: 10px 14px 14px;
-      background: linear-gradient(to top, rgba(11,11,15,0.98), rgba(11,11,15,0.85));
-      backdrop-filter: blur(14px);
-    }
-
-    .nav-wrap {
+      width: min(calc(100% - 22px), 520px);
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 22px;
-      padding: 8px;
+      gap: 6px;
+      padding: 7px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(17,24,39,0.14);
+      backdrop-filter: blur(18px);
+      z-index: 20;
     }
 
     .nav-btn {
       border: 0;
-      border-radius: 16px;
-      padding: 12px 8px;
       background: transparent;
-      color: #cfcfd6;
+      color: var(--muted);
+      border-radius: 17px;
+      min-height: 51px;
       font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.18s ease;
+      font-weight: 850;
     }
 
     .nav-btn.active {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      background: var(--dark);
       color: white;
-      box-shadow: 0 10px 24px var(--primary-glow);
     }
 
-    .footer { color: #71717a; text-align: center; font-size: 12px; margin-top: 18px; }
-  </style>
+    body.dark-theme .nav-btn.active {
+      background: #ffffff;
+      color: #111827;
+    }
+
+    @media (max-width: 365px) {
+      .quick-row {
+        grid-template-columns: 1fr;
+      }
+
+      .current-mode {
+        font-size: 29px;
+      }
+
+      .grid,
+      .modes-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .wide {
+        grid-column: auto;
+      }
+
+      .logo-options {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 440px) {
+      .modes-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  
+    #alarmOnBtn.selected {
+      background: var(--red);
+      border-color: var(--red);
+      color: white;
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.18);
+    }
+
+    #alarmOffBtn.selected {
+      background: var(--dark);
+      border-color: var(--dark);
+      color: white;
+    }
+
+  
+    .control-disabled {
+      opacity: 0.48;
+      pointer-events: none;
+      filter: grayscale(0.2);
+    }
+
+    .control-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+    }
+
+    .control-status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .control-status.on::before {
+      background: var(--green);
+    }
+
+    .btn.pending {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    #alarmOnBtn,
+    #alarmOffBtn {
+      background: var(--surface-2);
+      border-color: var(--line);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    #alarmOnBtn.selected {
+      background: var(--red);
+      border-color: var(--red);
+      color: white;
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.18);
+    }
+
+    #alarmOffBtn.selected {
+      background: var(--red);
+      border-color: var(--red);
+      color: white;
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.18);
+    }
+
+  
+    
+
+    
+
+    .mini-switch-row {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-switch-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      border-radius: 15px;
+    }
+
+    .mini-switch-item strong {
+      font-size: 14px;
+    }
+
+    .mini-switch-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .mini-switch-item.red strong { color: #dc2626; }
+    .mini-switch-item.green strong { color: #16a34a; }
+    .mini-switch-item.yellow strong { color: #ca8a04; }
+
+  
+    .logo.c-logo{
+      width:56px;
+      height:56px;
+      border-radius:18px;
+      background:#0b1020;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:34px;
+      font-weight:900;
+      letter-spacing:-2px;
+      box-shadow:0 10px 22px rgba(11,16,32,.18);
+    }
+
+</style>
+
+  <link id="appleIcon" rel="apple-touch-icon" href="data:image/svg+xml,<svg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27><rect%20width=%27100%27%20height=%27100%27%20rx=%2724%27%20fill=%27%23171923%27/><text%20x=%2750%27%20y=%2762%27%20text-anchor=%27middle%27%20font-family=%27Arial,sans-serif%27%20font-size=%2734%27%20font-weight=%27900%27%20fill=%27white%27>C+H</text><path%20d=%27M42%2062h16M50%2054v16%27%20stroke=%27%23dc2626%27%20stroke-width=%275%27%20stroke-linecap=%27round%27/></svg>">
+  <link id="browserIcon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27><rect%20width=%27100%27%20height=%27100%27%20rx=%2724%27%20fill=%27%23171923%27/><text%20x=%2750%27%20y=%2762%27%20text-anchor=%27middle%27%20font-family=%27Arial,sans-serif%27%20font-size=%2734%27%20font-weight=%27900%27%20fill=%27white%27>C+H</text><path%20d=%27M42%2062h16M50%2054v16%27%20stroke=%27%23dc2626%27%20stroke-width=%275%27%20stroke-linecap=%27round%27/></svg>">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ctrl+Home">
+  <meta name="theme-color" content="#f3f4f6">
 </head>
+
 <body>
-  <main class="phone">
-    <section class="top">
-      <div class="title">
-        <h1>Ctrl+Home</h1>
-        <p>Command Your Comfort</p>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div id="appLogo" class="logo c-logo">C</div>
+        <div class="brand-text">
+          <h1>Ctrl+Home</h1>
+          <p>Smart home controller</p>
+        </div>
       </div>
-      <div id="status" class="status">Disconnected</div>
-    </section>
 
-    <section id="tab-home" class="tab-page active">
-      <section class="card">
-        <h2>Live Home Status</h2>
-        <div class="sensor-grid">
-          <div class="sensor"><span>Temperature</span><strong id="temp">-- °C</strong></div>
-          <div class="sensor"><span>Humidity</span><strong id="hum">-- %</strong></div>
-          <div class="sensor"><span>LDR Light</span><strong id="light">--</strong></div>
-          <div class="sensor"><span>Motion</span><strong id="motion">--</strong></div>
-          <div class="sensor"><span>Gas</span><strong id="gas">--</strong></div>
-          <div class="sensor"><span>Water Tank</span><strong id="water">--</strong></div>
-          <div class="sensor"><span>Potentiometer</span><strong id="potentiometer">--</strong></div>
-          <div class="sensor"><span>Current Mode</span><strong id="currentMode">--</strong></div>
-        </div>
-      </section>
+      <button class="connect-pill" onclick="connectMQTT()">
+        <span id="connDot" class="connect-dot"></span>
+        <span id="connText">Offline</span>
+      </button>
+    </header>
 
-      <section class="card">
-        <h2>Output Status</h2>
-        <div class="sensor-grid">
-          <div class="sensor"><span>Main Light</span><strong id="statusLight">--</strong></div>
-          <div class="sensor"><span>Fan</span><strong id="statusFan">--</strong></div>
-          <div class="sensor"><span>Curtain</span><strong id="statusCurtain">--</strong></div>
-          <div class="sensor"><span>Mood LEDs</span><strong id="statusRGB">--</strong></div>
-          <div class="sensor"><span>Alarm</span><strong id="statusAlarm">--</strong></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Alert</h2>
-        <div id="alert" class="alert">No alerts yet.</div>
-      </section>
-    </section>
-
-    <section id="tab-control" class="tab-page">
-      <section class="card">
-        <h2>Smart Modes</h2>
-        <div class="grid">
-          <button class="mode-btn" onclick="setMode('sleep', this)">Sleep</button>
-          <button class="mode-btn" onclick="setMode('study', this)">Study</button>
-          <button class="mode-btn" onclick="setMode('relax', this)">Relax</button>
-          <button class="mode-btn" onclick="setMode('away', this)">Away</button>
-          <button class="mode-btn" onclick="setMode('energy', this)">Energy Save</button>
-          <button class="mode-btn" onclick="setMode('comfort', this)">Custom Mood</button>
-          <button class="mode-btn emergency" onclick="setMode('emergency', this)">Emergency Mode</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Manual Control</h2>
-        <div class="grid">
-          <button class="control-btn" onclick="publish(T.lightControl, 'ON')">Light ON</button>
-          <button class="control-btn" onclick="publish(T.lightControl, 'OFF')">Light OFF</button>
-          <button class="control-btn" onclick="publish(T.fanControl, 'ON')">Fan ON</button>
-          <button class="control-btn" onclick="publish(T.fanControl, 'OFF')">Fan OFF</button>
-          <button class="control-btn" onclick="publish(T.alarmControl, 'ON')">Alarm ON</button>
-          <button class="control-btn" onclick="publish(T.alarmControl, 'OFF')">Alarm OFF</button>
-        </div>
-
-        <div class="row">
-          <label>Manual Curtain <span id="manualCurtainValue">90</span>°</label>
-          <input type="range" min="0" max="180" value="90" oninput="publishManualCurtain(this.value)" />
-        </div>
-
-        <div class="row">
-          <label>Manual Mood LEDs</label>
-          <div class="grid">
-            <button class="control-btn" onclick="toggleMoodLed('manualRed')">Red: <span id="manualRedText">OFF</span></button>
-            <button class="control-btn" onclick="toggleMoodLed('manualGreen')">Green: <span id="manualGreenText">OFF</span></button>
-            <button class="control-btn" onclick="toggleMoodLed('manualYellow')">Yellow: <span id="manualYellowText">OFF</span></button>
-            <button class="control-btn" onclick="turnMoodLedsOff()">All OFF</button>
+    <section id="homePage" class="page active">
+      <div class="hero">
+        <div class="hero-main">
+          <div>
+            <div class="eyebrow">Current mode</div>
+            <div class="current-mode">
+              <span id="heroModeIcon" class="mode-dot"></span>
+              <span id="heroMode">Manual</span>
+            </div>
           </div>
-        </div>
-      </section>
-    </section>
 
-    <section id="tab-comfort" class="tab-page">
-      <section class="card">
-        <h2>Custom Mood Mode</h2>
-        <p class="small">Create your own mood, save it, then apply it anytime.</p>
-
-        <div class="row">
-          <label>Mood Name</label>
-          <input id="moodName" type="text" value="My Mood" placeholder="Example: Movie Night" />
-        </div>
-
-        <div class="row">
-          <label>Brightness <span id="brightnessValue">150</span></label>
-          <input id="brightness" type="range" min="0" max="255" value="150" oninput="updateValue('brightnessValue', this.value)" />
-        </div>
-
-        <div class="row">
-          <label>Mood LED Colors</label>
-          <div class="grid">
-            <button class="control-btn" onclick="toggleMoodLed('moodRed')">Red: <span id="moodRedText">OFF</span></button>
-            <button class="control-btn" onclick="toggleMoodLed('moodGreen')">Green: <span id="moodGreenText">OFF</span></button>
-            <button class="control-btn" onclick="toggleMoodLed('moodYellow')">Yellow: <span id="moodYellowText">OFF</span></button>
-            <button class="control-btn" onclick="turnMoodEditorOff()">All OFF</button>
+          <div class="climate">
+            <strong id="heroTemp">--°C</strong>
+            <span id="heroHum">--% RH</span>
           </div>
         </div>
 
-        <div class="row">
-          <label>Fan Speed</label>
-          <select id="fanSpeed">
-            <option value="off">Off</option>
-            <option value="low" selected>Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
+        <div id="alertBox" class="alert-card">Waiting for ESP32 data...</div>
+      </div>
+
+      <div class="quick-row">
+        <button class="quick study" onclick="setMode('study')">
+          <div class="quick-icon" data-icon="study"></div>
+          <strong>Study</strong>
+          <span>bright light</span>
+        </button>
+        <button class="quick energy" onclick="setMode('energy')">
+          <div class="quick-icon" data-icon="energy"></div>
+          <strong>Energy</strong>
+          <span>save power</span>
+        </button>
+        <button class="quick emergency" onclick="setMode('emergency')">
+          <div class="quick-icon" data-icon="emergency"></div>
+          <strong>Emergency</strong>
+          <span>alarm mode</span>
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>Live readings</h2>
+          <span>from ESP32</span>
         </div>
 
-        <div class="row">
-          <label>Curtain Position <span id="curtainValue">90</span>°</label>
-          <input id="curtain" type="range" min="0" max="180" value="90" oninput="updateValue('curtainValue', this.value)" />
+        <div class="grid">
+          <div class="card tile">
+            <div class="tile-label">Temperature</div>
+            <div id="temperature" class="tile-value">-- °C</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Humidity</div>
+            <div id="humidity" class="tile-value">-- %</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Light level</div>
+            <div id="light" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Motion</div>
+            <div id="motion" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Gas / smoke</div>
+            <div id="gas" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Water tank</div>
+            <div id="water" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Potentiometer</div>
+            <div id="potentiometer" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">LCD</div>
+            <div id="lcdStatus" class="tile-value">Mode display</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>Output status</h2>
+          <span>current state</span>
         </div>
 
-        <div class="row">
-          <label>Preferred Temperature <span id="tempValue">25</span> °C</label>
-          <input id="targetTemp" type="range" min="18" max="35" value="25" oninput="updateValue('tempValue', this.value)" />
+        <div class="grid">
+          <div class="card tile">
+            <div class="tile-label">Main light</div>
+            <div id="statusLight" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Fan</div>
+            <div id="statusFan" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Curtain</div>
+            <div id="statusCurtain" class="tile-value">--</div>
+          </div>
+          <div class="card tile">
+            <div class="tile-label">Alarm</div>
+            <div id="statusAlarm" class="tile-value">--</div>
+          </div>
+          <div class="card tile wide">
+            <div class="tile-label">Mood LEDs</div>
+            <div id="statusRgb" class="tile-value">--</div>
+          </div>
         </div>
-
-        <div class="row">
-          <label>Alarm Monitoring</label>
-          <select id="alarmSetting">
-            <option value="OFF">Disabled</option>
-            <option value="ON">Enabled</option>
-          </select>
-        </div>
-
-        <div class="mood-actions">
-          <button class="control-btn" onclick="applyCurrentMood()">Apply Mood</button>
-          <button class="control-btn" onclick="saveMood()">Save Mood</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Saved Custom Moods</h2>
-        <div id="moodList" class="mood-list"></div>
-      </section>
+      </div>
     </section>
 
-    <section id="tab-settings" class="tab-page">
-      <section class="card">
-        <h2>Connection</h2>
-        <div class="settings">
-          <input id="broker" type="text" value="wss://broker.hivemq.com:8884/mqtt" />
-          <button class="connect-btn" onclick="connectMQTT()">Connect Controller</button>
-          <button class="control-btn" onclick="enableNotifications()">Enable Phone Alerts</button>
-        </div>
-        <p class="small">Use the same HiveMQ broker as the ESP32. The app uses WebSocket MQTT.</p>
-      </section>
-
-      <section class="card">
-        <h2>Theme Settings</h2>
-        <p class="small">Choose a controller color theme. It will be saved on this phone.</p>
-
-        <div class="theme-grid">
-          <button class="theme-dot theme-red active-theme" onclick="setTheme('red', this)"></button>
-          <button class="theme-dot theme-blue" onclick="setTheme('blue', this)"></button>
-          <button class="theme-dot theme-green" onclick="setTheme('green', this)"></button>
-          <button class="theme-dot theme-purple" onclick="setTheme('purple', this)"></button>
-          <button class="theme-dot theme-orange" onclick="setTheme('orange', this)"></button>
-          <button class="theme-dot theme-pink" onclick="setTheme('pink', this)"></button>
-          <button class="theme-dot theme-cyan" onclick="setTheme('cyan', this)"></button>
-          <button class="theme-dot theme-white" onclick="setTheme('white', this)"></button>
+    <section id="controlPage" class="page">
+      <div class="section">
+        <div class="section-head">
+          <h2>Smart modes</h2>
+          <span>tap once</span>
         </div>
 
-        <div class="row">
-          <label>Custom Theme Color</label>
-          <input id="themePicker" type="color" value="#ef4444" onchange="setCustomTheme(this.value)" />
+        <div class="modes-grid">
+          <button class="mode-btn" data-mode="sleep" onclick="setMode('sleep')" style="--mode-color:#7c3aed">
+            <div class="mode-icon" data-icon="sleep"></div>
+            <strong>Sleep</strong><span>dim room, quiet fan</span>
+          </button>
+          <button class="mode-btn" data-mode="study" onclick="setMode('study')" style="--mode-color:#2563eb">
+            <div class="mode-icon" data-icon="study"></div>
+            <strong>Study</strong><span>bright room</span>
+          </button>
+          <button class="mode-btn" data-mode="relax" onclick="setMode('relax')" style="--mode-color:#0d9488">
+            <div class="mode-icon" data-icon="relax"></div>
+            <strong>Relax</strong><span>soft light</span>
+          </button>
+          <button class="mode-btn" data-mode="away" onclick="setMode('away')" style="--mode-color:#475569">
+            <div class="mode-icon" data-icon="away"></div>
+            <strong>Away</strong><span>security watch</span>
+          </button>
+          <button class="mode-btn" data-mode="energy" onclick="setMode('energy')" style="--mode-color:#16a34a">
+            <div class="mode-icon" data-icon="energy"></div>
+            <strong>Energy</strong><span>reduce usage</span>
+          </button>
+          <button class="mode-btn" data-mode="emergency" onclick="setMode('emergency')" style="--mode-color:#dc2626">
+            <div class="mode-icon" data-icon="emergency"></div>
+            <strong>Emergency</strong><span>alarm output</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>Manual control</h2>
+          <span>outputs</span>
         </div>
 
-        <div class="theme-actions">
-          <button class="control-btn" onclick="setTheme('dark', null)">Dark</button>
-          <button class="control-btn" onclick="setTheme('red', document.querySelector('.theme-red'))">Reset Red</button>
+        <div class="card control-card">
+          <div class="control-head">
+            <h3>Main light</h3>
+            <span id="lightStatus" class="control-status">Off</span>
+          </div>
+
+          <button id="lightSwitch" class="switch" onclick="toggleLightPower()"></button>
+
+          <div id="lightControls" class="control-disabled" style="margin-top:12px;">
+            <div class="range-wrap">
+              <input id="lightSlider" type="range" min="0" max="255" value="0" oninput="previewLight(this.value)">
+              <div id="lightValue" class="value-pill">0</div>
+            </div>
+
+            <div class="btn-grid" style="margin-top:10px;">
+              <button id="lightConfirmBtn" class="btn primary" onclick="confirmLight()">Confirm</button>
+              <button class="btn" onclick="resetLight()">Reset</button>
+            </div>
+          </div>
         </div>
-      </section>
+
+        <div class="card control-card">
+          <div class="control-head">
+            <h3>Fan</h3>
+            <span id="fanStatus" class="control-status">Off</span>
+          </div>
+
+          <button id="fanSwitch" class="switch" onclick="toggleFanPower()"></button>
+
+          <div id="fanControls" class="control-disabled" style="margin-top:12px;">
+            <div class="btn-grid three">
+              <button id="fanLowBtn" class="btn" data-fan="low" onclick="setFan('low')">Low</button>
+              <button id="fanMediumBtn" class="btn" data-fan="medium" onclick="setFan('medium')">Medium</button>
+              <button id="fanHighBtn" class="btn" data-fan="high" onclick="setFan('high')">High</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card control-card">
+          <div class="control-head">
+            <h3>Curtain</h3>
+            <span id="curtainStatus" class="control-status">Off</span>
+          </div>
+
+          <button id="curtainSwitch" class="switch" onclick="toggleCurtainPower()"></button>
+
+          <div id="curtainControls" class="control-disabled" style="margin-top:12px;">
+            <div class="range-wrap">
+              <input id="curtainSlider" type="range" min="0" max="180" value="90" oninput="previewCurtain(this.value)">
+              <div id="curtainValue" class="value-pill">90°</div>
+            </div>
+
+            <div class="btn-grid" style="margin-top:10px;">
+              <button id="curtainConfirmBtn" class="btn primary" onclick="confirmCurtain()">Confirm</button>
+              <button class="btn" onclick="resetCurtain()">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card control-card">
+          <div class="control-head">
+            <h3>Mood LEDs</h3>
+            <span>switch colors</span>
+          </div>
+
+          <div class="mini-switch-row">
+            <div class="mini-switch-item red">
+              <div>
+                <strong>Red LED</strong>
+                <span id="redLedStatus">Off</span>
+              </div>
+              <button id="redLedSwitch" class="switch" onclick="toggleLed('red')"></button>
+            </div>
+
+            <div class="mini-switch-item green">
+              <div>
+                <strong>Green LED</strong>
+                <span id="greenLedStatus">Off</span>
+              </div>
+              <button id="greenLedSwitch" class="switch" onclick="toggleLed('green')"></button>
+            </div>
+
+            <div class="mini-switch-item yellow">
+              <div>
+                <strong>Yellow LED</strong>
+                <span id="yellowLedStatus">Off</span>
+              </div>
+              <button id="yellowLedSwitch" class="switch" onclick="toggleLed('yellow')"></button>
+            </div>
+          </div>
+
+          <div class="btn-grid" style="margin-top:10px;">
+            <button class="btn" onclick="resetLeds()">Reset</button>
+            <button class="btn dark" onclick="clearLeds()">All off</button>
+          </div>
+        </div>
+
+        <div class="card control-card">
+          <div class="control-head">
+            <h3>Alarm</h3>
+            <span>buzzer</span>
+          </div>
+          <div class="btn-grid">
+            <button id="alarmOnBtn" class="btn" onclick="setAlarm('ON')">Turn on</button>
+            <button id="alarmOffBtn" class="btn" onclick="setAlarm('OFF')">Turn off</button>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <div class="footer">Ctrl+Home Final Controller</div>
+    <section id="moodPage" class="page">
+      <div class="section">
+        <div class="section-head">
+          <h2>Custom mood</h2>
+          <span>save setup</span>
+        </div>
+
+        <div class="card control-card">
+          <div class="field">
+            <label>Mood name</label>
+            <input id="moodName" type="text" value="Comfort mode">
+          </div>
+
+          <div class="field">
+            <label>Brightness</label>
+            <input id="moodBrightness" type="range" min="0" max="255" value="150">
+          </div>
+
+          <div class="field">
+            <label>LED colors</label>
+            <div class="led-grid">
+              <button id="moodRedBtn" class="led red" onclick="toggleMoodLed('red')">Red</button>
+              <button id="moodGreenBtn" class="led green on" onclick="toggleMoodLed('green')">Green</button>
+              <button id="moodYellowBtn" class="led yellow on" onclick="toggleMoodLed('yellow')">Yellow</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Fan speed</label>
+            <select id="moodFan">
+              <option value="off">Off</option>
+              <option value="low" selected>Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Curtain position</label>
+            <input id="moodCurtain" type="range" min="0" max="180" value="90">
+          </div>
+
+          <div class="field">
+            <label>Preferred temperature</label>
+            <input id="moodTemp" type="number" min="18" max="35" value="25">
+          </div>
+
+          <div class="field">
+            <label>Alarm monitoring</label>
+            <select id="moodAlarm">
+              <option value="OFF" selected>Off</option>
+              <option value="ON">On</option>
+            </select>
+          </div>
+
+          <div class="btn-grid">
+            <button class="btn primary" onclick="applyMood()">Apply now</button>
+            <button class="btn" onclick="saveMood()">Save mood</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>Saved moods</h2>
+          <span>stored on phone</span>
+        </div>
+        <div id="savedMoods" class="mood-list"></div>
+      </div>
+    </section>
+
+    <section id="settingsPage" class="page">
+      <div class="section">
+        <div class="section-head">
+          <h2>Connection</h2>
+          <span>MQTT websocket</span>
+        </div>
+
+        <div class="card control-card">
+          <div class="field">
+            <label>Broker URL</label>
+            <input id="brokerInput" value="wss://broker.hivemq.com:8884/mqtt">
+          </div>
+
+          <div class="btn-grid">
+            <button class="btn primary" onclick="connectMQTT()">Connect</button>
+            <button class="btn" onclick="disconnectMQTT()">Disconnect</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>App settings</h2>
+          <span>personalize</span>
+        </div>
+
+        <div class="card control-card">
+          <div class="settings-row">
+            <div>
+              <strong>Notifications</strong>
+              <span>phone alert when sensor warning happens</span>
+            </div>
+            <button id="notificationSwitch" class="switch" onclick="toggleNotifications()"></button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <strong>Theme</strong>
+              <span>choose default or dark mode</span>
+            </div>
+          </div>
+
+          <div class="theme-toggle">
+            <button id="defaultThemeBtn" class="theme-option active" onclick="setTheme('default')">Default</button>
+            <button id="darkThemeBtn" class="theme-option" onclick="setTheme('dark')">Dark</button>
+          </div>
+        </div>
+      </div>
+
+      </section>
   </main>
 
   <nav class="bottom-nav">
-    <div class="nav-wrap">
-      <button class="nav-btn active" onclick="showTab('home', this)">Home</button>
-      <button class="nav-btn" onclick="showTab('control', this)">Control</button>
-      <button class="nav-btn" onclick="showTab('comfort', this)">Mood</button>
-      <button class="nav-btn" onclick="showTab('settings', this)">Settings</button>
-    </div>
+    <button class="nav-btn active" onclick="showPage('homePage', this)">Home</button>
+    <button class="nav-btn" onclick="showPage('controlPage', this)">Control</button>
+    <button class="nav-btn" onclick="showPage('moodPage', this)">Mood</button>
+    <button class="nav-btn" onclick="showPage('settingsPage', this)">Settings</button>
   </nav>
 
   <script>
-    let client = null;
     const BASE = "ctrlhome/B6737115";
 
     const T = {
@@ -467,7 +1383,7 @@
       alarmControl: BASE + "/alarm/control",
 
       customBrightness: BASE + "/custom/brightness",
-      customRGB: BASE + "/custom/rgb",
+      customRgb: BASE + "/custom/rgb",
       customFan: BASE + "/custom/fan",
       customCurtain: BASE + "/custom/curtain",
       customAlarm: BASE + "/custom/alarm",
@@ -476,345 +1392,619 @@
       statusLight: BASE + "/status/light",
       statusFan: BASE + "/status/fan",
       statusCurtain: BASE + "/status/curtain",
-      statusRGB: BASE + "/status/rgb",
+      statusRgb: BASE + "/status/rgb",
       statusAlarm: BASE + "/status/alarm"
     };
 
-    const themes = {
-      red: ["#ef4444", "#991b1b"],
-      blue: ["#3b82f6", "#1e3a8a"],
-      green: ["#22c55e", "#14532d"],
-      purple: ["#a855f7", "#581c87"],
-      orange: ["#f97316", "#7c2d12"],
-      pink: ["#ec4899", "#831843"],
-      cyan: ["#06b6d4", "#164e63"],
-      white: ["#f8fafc", "#71717a"],
-      dark: ["#52525b", "#18181b"]
+    let client = null;
+    let ledState = { red: false, green: false, yellow: false };
+    let moodLedState = { red: false, green: true, yellow: true };
+    let notificationsEnabled = false;
+    let selectedFan = "";
+    let selectedAlarm = "";
+    let lightPower = false;
+    let lightPending = 0;
+    let lightApplied = 0;
+    let fanPower = false;
+    let curtainPower = false;
+    let curtainPending = 90;
+    let curtainApplied = 90;
+
+    const iconSvg = {
+      sleep: `<svg viewBox="0 0 24 24"><path d="M20 15.5A7.8 7.8 0 0 1 8.5 4a8 8 0 1 0 11.5 11.5Z"/></svg>`,
+      study: `<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"/><path d="M8 7h8M8 11h8"/></svg>`,
+      relax: `<svg viewBox="0 0 24 24"><path d="M6 8h12v5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5V8Z"/><path d="M18 9h1.5a2.5 2.5 0 0 1 0 5H18"/><path d="M7 21h10"/></svg>`,
+      away: `<svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M12 15v2"/></svg>`,
+      energy: `<svg viewBox="0 0 24 24"><path d="M5 13c6.5-9 13-8 14-8 0 1 .2 8-7 12-3.2 1.8-6 1-7 0Z"/><path d="M5 17c3-1 6-3 9-7"/></svg>`,
+      emergency: `<svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg>`,
+      manual: `<svg viewBox="0 0 24 24"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></svg>`
     };
 
-    function showTab(name, button) {
-      document.querySelectorAll(".tab-page").forEach(tab => tab.classList.remove("active"));
-      document.getElementById("tab-" + name).classList.add("active");
+    const modeMeta = {
+      sleep: { name: "Sleep", color: "#7c3aed", icon: "sleep" },
+      study: { name: "Study", color: "#2563eb", icon: "study" },
+      relax: { name: "Relax", color: "#0d9488", icon: "relax" },
+      away: { name: "Away", color: "#475569", icon: "away" },
+      energy: { name: "Energy", color: "#16a34a", icon: "energy" },
+      emergency: { name: "Emergency", color: "#dc2626", icon: "emergency" },
+      comfort: { name: "Custom", color: "#9333ea", icon: "manual" },
+      manual: { name: "Manual", color: "#dc2626", icon: "manual" }
+    };
+
+
+
+    function showPage(pageId, button) {
+      document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+      document.getElementById(pageId).classList.add("active");
+
       document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
       button.classList.add("active");
-    }
 
-    function setStatus(text, connected) {
-      const status = document.getElementById("status");
-      status.textContent = text;
-      status.classList.toggle("connected", connected);
-    }
-
-    function hexToRgba(hex, alpha) {
-      const clean = hex.replace("#", "");
-      const r = parseInt(clean.substring(0, 2), 16);
-      const g = parseInt(clean.substring(2, 4), 16);
-      const b = parseInt(clean.substring(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    }
-
-    function darkenHex(hex, percent = 45) {
-      const clean = hex.replace("#", "");
-      let r = parseInt(clean.substring(0, 2), 16);
-      let g = parseInt(clean.substring(2, 4), 16);
-      let b = parseInt(clean.substring(4, 6), 16);
-
-      r = Math.max(0, Math.round(r * (1 - percent / 100)));
-      g = Math.max(0, Math.round(g * (1 - percent / 100)));
-      b = Math.max(0, Math.round(b * (1 - percent / 100)));
-
-      return "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("");
-    }
-
-    function applyTheme(primary, dark) {
-      document.documentElement.style.setProperty("--primary", primary);
-      document.documentElement.style.setProperty("--primary-dark", dark);
-      document.documentElement.style.setProperty("--primary-soft", hexToRgba(primary, 0.28));
-      document.documentElement.style.setProperty("--primary-glow", hexToRgba(primary, 0.28));
-      document.documentElement.style.setProperty("--primary-alert", hexToRgba(primary, 0.12));
-      document.documentElement.style.setProperty("--primary-alert-border", hexToRgba(primary, 0.22));
-      document.getElementById("themePicker").value = primary;
-    }
-
-    function setTheme(name, button) {
-      const selected = themes[name] || themes.red;
-      applyTheme(selected[0], selected[1]);
-      localStorage.setItem("ctrlhome_theme", JSON.stringify({ primary: selected[0], dark: selected[1] }));
-      document.querySelectorAll(".theme-dot").forEach(btn => btn.classList.remove("active-theme"));
-      if (button) button.classList.add("active-theme");
-    }
-
-    function setCustomTheme(hex) {
-      const dark = darkenHex(hex);
-      applyTheme(hex, dark);
-      localStorage.setItem("ctrlhome_theme", JSON.stringify({ primary: hex, dark }));
-      document.querySelectorAll(".theme-dot").forEach(btn => btn.classList.remove("active-theme"));
-    }
-
-    function loadSavedTheme() {
-      const saved = localStorage.getItem("ctrlhome_theme");
-      if (!saved) return;
-      try {
-        const theme = JSON.parse(saved);
-        applyTheme(theme.primary, theme.dark);
-      } catch (error) {
-        applyTheme("#ef4444", "#991b1b");
-      }
-    }
-
-
-    let lastPhoneAlert = "";
-    let lastPhoneAlertTime = 0;
-
-    function enableNotifications() {
-      if ("Notification" in window) {
-        Notification.requestPermission();
-      } else {
-      }
-
-      if ("vibrate" in navigator) {
-        navigator.vibrate(120);
-      }
-    }
-
-    function phoneAlert(message) {
-      const now = Date.now();
-
-      if (message === lastPhoneAlert && now - lastPhoneAlertTime < 8000) {
-        return;
-      }
-
-      lastPhoneAlert = message;
-      lastPhoneAlertTime = now;
-
-      if ("vibrate" in navigator) {
-        navigator.vibrate([200, 100, 200]);
-      }
-
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Ctrl+Home Alert", {
-          body: message
-        });
-      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function connectMQTT() {
-      const brokerUrl = document.getElementById("broker").value.trim();
-      const clientId = "ctrlhome_phone_" + Math.random().toString(16).slice(2, 10);
+      const broker = document.getElementById("brokerInput").value.trim();
 
-      setStatus("Connecting...", false);
+      if (!broker) {
+        alert("Enter broker URL first");
+        return;
+      }
 
-      client = mqtt.connect(brokerUrl, {
-        clientId,
-        clean: true,
-        connectTimeout: 5000,
-        reconnectPeriod: 2000
-      });
+      try {
+        if (client) client.end(true);
 
-      client.on("connect", () => {
-        setStatus("Connected", true);
-        [
-          T.temperature, T.humidity, T.light, T.motion, T.gas, T.water, T.potentiometer, T.alert, T.currentMode,
-          T.statusLight, T.statusFan, T.statusCurtain, T.statusRGB, T.statusAlarm
-        ].forEach(topic => client.subscribe(topic));
-      });
+        document.getElementById("connText").textContent = "Connecting";
+        document.getElementById("connDot").classList.remove("online");
 
-      client.on("reconnect", () => setStatus("Reconnecting...", false));
-      client.on("error", () => setStatus("Error", false));
-      client.on("offline", () => setStatus("Offline", false));
+        client = mqtt.connect(broker, {
+          clientId: "CtrlHomePhone_" + Math.random().toString(16).slice(2),
+          clean: true,
+          reconnectPeriod: 1500,
+          connectTimeout: 6000
+        });
 
-      client.on("message", (topic, payload) => {
-        const message = payload.toString();
+        client.on("connect", () => {
+          document.getElementById("connText").textContent = "Online";
+          document.getElementById("connDot").classList.add("online");
 
-        if (topic === T.temperature) document.getElementById("temp").textContent = message + " °C";
-        if (topic === T.humidity) document.getElementById("hum").textContent = message + " %";
-        if (topic === T.light) document.getElementById("light").textContent = message;
-        if (topic === T.motion) document.getElementById("motion").textContent = message;
-        if (topic === T.gas) document.getElementById("gas").textContent = message;
-        if (topic === T.water) document.getElementById("water").textContent = message;
-        if (topic === T.potentiometer) document.getElementById("potentiometer").textContent = message;
-        if (topic === T.currentMode) document.getElementById("currentMode").textContent = message;
-        if (topic === T.alert) {
-          document.getElementById("alert").textContent = message;
-          if (message !== "All sensors normal" && message !== "No alerts yet.") {
-            phoneAlert(message);
-          }
+          [
+            T.temperature, T.humidity, T.light, T.motion, T.gas, T.water,
+            T.potentiometer, T.alert, T.currentMode,
+            T.statusLight, T.statusFan, T.statusCurtain, T.statusRgb, T.statusAlarm
+          ].forEach(topic => client.subscribe(topic));
+        });
+
+        client.on("reconnect", () => {
+          document.getElementById("connText").textContent = "Connecting";
+          document.getElementById("connDot").classList.remove("online");
+        });
+
+        client.on("offline", () => {
+          document.getElementById("connText").textContent = "Offline";
+          document.getElementById("connDot").classList.remove("online");
+        });
+
+        client.on("error", () => {
+          document.getElementById("connText").textContent = "Error";
+          document.getElementById("connDot").classList.remove("online");
+        });
+
+        client.on("message", (topic, payload) => {
+          handleMessage(topic, payload.toString());
+        });
+      } catch (error) {
+        alert("MQTT connection failed");
+      }
+    }
+
+    function disconnectMQTT() {
+      if (client) client.end(true);
+      document.getElementById("connText").textContent = "Offline";
+      document.getElementById("connDot").classList.remove("online");
+    }
+
+    function handleMessage(topic, message) {
+      if (topic === T.temperature) {
+        const value = Number(message);
+        document.getElementById("temperature").textContent = message + " °C";
+        document.getElementById("heroTemp").textContent = Number.isFinite(value) ? Math.round(value) + "°C" : "--°C";
+      }
+
+      if (topic === T.humidity) {
+        const value = Number(message);
+        document.getElementById("humidity").textContent = message + " %";
+        document.getElementById("heroHum").textContent = Number.isFinite(value) ? Math.round(value) + "% RH" : "--% RH";
+      }
+
+      if (topic === T.light) document.getElementById("light").textContent = message;
+      if (topic === T.motion) document.getElementById("motion").textContent = message;
+      if (topic === T.gas) document.getElementById("gas").textContent = message;
+      if (topic === T.water) document.getElementById("water").textContent = message;
+      if (topic === T.potentiometer) document.getElementById("potentiometer").textContent = message;
+
+      if (topic === T.currentMode) {
+        updateModeDisplay(message);
+      }
+
+      if (topic === T.alert) {
+        document.getElementById("alertBox").textContent = message;
+        document.getElementById("lcdStatus").textContent = message === "All sensors normal" ? "Mode display" : "Notification";
+        notifyPhone(message);
+      }
+
+      if (topic === T.statusLight) {
+        document.getElementById("statusLight").textContent = message;
+        const value = Number(message);
+        if (Number.isFinite(value)) {
+          lightPower = value > 0;
+          lightApplied = value;
+          lightPending = value;
+          const slider = document.getElementById("lightSlider");
+          if (slider) slider.value = value;
+          showValue("lightValue", String(value));
+          syncLightControl();
         }
+      }
+      if (topic === T.statusFan) {
+        document.getElementById("statusFan").textContent = message;
+        const fanNumber = Number(message);
+        if (fanNumber === 0) {
+          selectedFan = "off";
+          fanPower = false;
+        } else if (fanNumber <= 100) {
+          selectedFan = "low";
+          fanPower = true;
+        } else if (fanNumber <= 200) {
+          selectedFan = "medium";
+          fanPower = true;
+        } else {
+          selectedFan = "high";
+          fanPower = true;
+        }
+        syncFanButtons();
+      }
+      if (topic === T.statusCurtain) {
+        document.getElementById("statusCurtain").textContent = message + "°";
+        const value = Number(message);
+        if (Number.isFinite(value)) {
+          curtainPower = value > 0;
+          curtainApplied = value;
+          curtainPending = value;
+          const slider = document.getElementById("curtainSlider");
+          if (slider) slider.value = value;
+          showValue("curtainValue", value + "°");
+          syncCurtainControl();
+        }
+      }
+      if (topic === T.statusRgb) document.getElementById("statusRgb").textContent = message;
+      if (topic === T.statusAlarm) {
+        document.getElementById("statusAlarm").textContent = message;
+        selectedAlarm = message;
+        syncAlarmButtons();
+      }
+    }
 
-        if (topic === T.statusLight) document.getElementById("statusLight").textContent = message;
-        if (topic === T.statusFan) document.getElementById("statusFan").textContent = message;
-        if (topic === T.statusCurtain) document.getElementById("statusCurtain").textContent = message + "°";
-        if (topic === T.statusRGB) document.getElementById("statusRGB").textContent = message;
-        if (topic === T.statusAlarm) document.getElementById("statusAlarm").textContent = message;
+    function updateModeDisplay(mode) {
+      const meta = modeMeta[mode] || modeMeta.manual;
+
+      document.getElementById("heroMode").textContent = meta.name;
+      document.documentElement.style.setProperty("--accent", meta.color);
+      document.getElementById("heroModeIcon").innerHTML = iconSvg[meta.icon] || iconSvg.manual;
+
+      document.querySelectorAll(".mode-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
       });
     }
 
     function publish(topic, message) {
       if (!client || !client.connected) {
-        setStatus("Not connected", false);
+        alert("Connect MQTT first");
         return;
       }
+
       client.publish(topic, String(message));
     }
 
-    function setMode(mode, button) {
+    function setMode(mode) {
+      updateModeDisplay(mode);
       publish(T.mode, mode);
-      document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
-      button.classList.add("active");
     }
 
-    function updateValue(displayId, value) {
-      document.getElementById(displayId).textContent = value;
-    }
+    function toggleLightPower() {
+      lightPower = !lightPower;
+      syncLightControl();
 
-    function publishManualCurtain(value) {
-      updateValue("manualCurtainValue", value);
-      publish(T.curtainControl, value);
-    }
-
-    const moodLedState = {
-      manualRed: false,
-      manualGreen: false,
-      manualYellow: false,
-      moodRed: false,
-      moodGreen: false,
-      moodYellow: false
-    };
-
-    function moodPayload(prefix) {
-      const red = moodLedState[prefix + "Red"] ? 255 : 0;
-      const green = moodLedState[prefix + "Green"] ? 255 : 0;
-      const yellow = moodLedState[prefix + "Yellow"] ? 255 : 0;
-      return `${red},${green},${yellow}`;
-    }
-
-    function updateMoodLedText(key) {
-      const text = document.getElementById(key + "Text");
-      if (text) text.textContent = moodLedState[key] ? "ON" : "OFF";
-    }
-
-    function toggleMoodLed(key) {
-      moodLedState[key] = !moodLedState[key];
-      updateMoodLedText(key);
-
-      if (key.startsWith("manual")) {
-        publish(T.customRGB, moodPayload("manual"));
+      if (!lightPower) {
+        lightApplied = 0;
+        lightPending = 0;
+        document.getElementById("lightSlider").value = 0;
+        showValue("lightValue", "0");
+        publish(T.lightControl, 0);
       }
     }
 
-    function turnMoodLedsOff() {
-      moodLedState.manualRed = false;
-      moodLedState.manualGreen = false;
-      moodLedState.manualYellow = false;
-      updateMoodLedText("manualRed");
-      updateMoodLedText("manualGreen");
-      updateMoodLedText("manualYellow");
-      publish(T.customRGB, "0,0,0");
+    function previewLight(value) {
+      lightPending = Number(value);
+      showValue("lightValue", value);
+      document.getElementById("lightConfirmBtn").classList.toggle("pending", lightPending !== lightApplied);
     }
 
-    function turnMoodEditorOff() {
-      moodLedState.moodRed = false;
-      moodLedState.moodGreen = false;
-      moodLedState.moodYellow = false;
-      updateMoodLedText("moodRed");
-      updateMoodLedText("moodGreen");
-      updateMoodLedText("moodYellow");
+    function confirmLight() {
+      if (!lightPower) return;
+      lightApplied = lightPending;
+      document.getElementById("lightConfirmBtn").classList.remove("pending");
+      publish(T.lightControl, lightApplied);
     }
 
-    function getCurrentMood() {
-      return {
-        name: document.getElementById("moodName").value.trim() || "Custom Mood",
-        brightness: document.getElementById("brightness").value,
-        red: moodLedState.moodRed,
-        green: moodLedState.moodGreen,
-        yellow: moodLedState.moodYellow,
-        fan: document.getElementById("fanSpeed").value,
-        curtain: document.getElementById("curtain").value,
-        temp: document.getElementById("targetTemp").value,
-        alarm: document.getElementById("alarmSetting").value
-      };
+    function resetLight() {
+      lightPending = lightApplied;
+      document.getElementById("lightSlider").value = lightApplied;
+      showValue("lightValue", lightApplied);
+      document.getElementById("lightConfirmBtn").classList.remove("pending");
     }
 
-    function applyMood(mood) {
+    function setLight(value) {
+      lightPower = Number(value) > 0;
+      lightPending = Number(value);
+      lightApplied = Number(value);
+      document.getElementById("lightSlider").value = value;
+      showValue("lightValue", value);
+      syncLightControl();
+      publish(T.lightControl, value);
+    }
+
+    function syncLightControl() {
+      document.getElementById("lightSwitch").classList.toggle("on", lightPower);
+      document.getElementById("lightControls").classList.toggle("control-disabled", !lightPower);
+      document.getElementById("lightStatus").textContent = lightPower ? "On" : "Off";
+      document.getElementById("lightStatus").classList.toggle("on", lightPower);
+    }
+
+    function toggleFanPower() {
+      fanPower = !fanPower;
+      if (!fanPower) {
+        selectedFan = "off";
+        publish(T.fanControl, "off");
+      } else {
+        selectedFan = selectedFan === "off" || !selectedFan ? "low" : selectedFan;
+        publish(T.fanControl, selectedFan);
+      }
+      syncFanButtons();
+    }
+
+    function setFan(value) {
+      if (!fanPower) return;
+      selectedFan = value;
+      syncFanButtons();
+      publish(T.fanControl, value);
+    }
+
+    function syncFanButtons() {
+      document.getElementById("fanSwitch").classList.toggle("on", fanPower);
+      document.getElementById("fanControls").classList.toggle("control-disabled", !fanPower);
+      document.getElementById("fanStatus").textContent = fanPower ? "On" : "Off";
+      document.getElementById("fanStatus").classList.toggle("on", fanPower);
+
+      document.querySelectorAll("[data-fan]").forEach(btn => {
+        btn.classList.toggle("selected", fanPower && btn.dataset.fan === selectedFan);
+      });
+    }
+
+    function toggleCurtainPower() {
+      curtainPower = !curtainPower;
+      syncCurtainControl();
+
+      if (!curtainPower) {
+        curtainApplied = 0;
+        curtainPending = 0;
+        document.getElementById("curtainSlider").value = 0;
+        showValue("curtainValue", "0°");
+        publish(T.curtainControl, 0);
+      }
+    }
+
+    function previewCurtain(value) {
+      curtainPending = Number(value);
+      showValue("curtainValue", value + "°");
+      document.getElementById("curtainConfirmBtn").classList.toggle("pending", curtainPending !== curtainApplied);
+    }
+
+    function confirmCurtain() {
+      if (!curtainPower) return;
+      curtainApplied = curtainPending;
+      document.getElementById("curtainConfirmBtn").classList.remove("pending");
+      publish(T.curtainControl, curtainApplied);
+    }
+
+    function resetCurtain() {
+      curtainPending = curtainApplied;
+      document.getElementById("curtainSlider").value = curtainApplied;
+      showValue("curtainValue", curtainApplied + "°");
+      document.getElementById("curtainConfirmBtn").classList.remove("pending");
+    }
+
+    function setCurtain(value) {
+      curtainPower = Number(value) > 0;
+      curtainPending = Number(value);
+      curtainApplied = Number(value);
+      document.getElementById("curtainSlider").value = value;
+      showValue("curtainValue", value + "°");
+      syncCurtainControl();
+      publish(T.curtainControl, value);
+    }
+
+    function syncCurtainControl() {
+      document.getElementById("curtainSwitch").classList.toggle("on", curtainPower);
+      document.getElementById("curtainControls").classList.toggle("control-disabled", !curtainPower);
+      document.getElementById("curtainStatus").textContent = curtainPower ? "On" : "Off";
+      document.getElementById("curtainStatus").classList.toggle("on", curtainPower);
+    }
+
+    function setAlarm(value) {
+      selectedAlarm = value;
+      syncAlarmButtons();
+      publish(T.alarmControl, value);
+    }
+
+    function syncAlarmButtons() {
+      const onBtn = document.getElementById("alarmOnBtn");
+      const offBtn = document.getElementById("alarmOffBtn");
+
+      if (!onBtn || !offBtn) return;
+
+      onBtn.classList.remove("selected");
+      offBtn.classList.remove("selected");
+
+      if (selectedAlarm === "ON") {
+        onBtn.classList.add("selected");
+      } else {
+        offBtn.classList.add("selected");
+      }
+    }
+
+    function toggleLed(color) {
+      ledState[color] = !ledState[color];
+      syncLedButtons();
+
+      const r = ledState.red ? 255 : 0;
+      const g = ledState.green ? 255 : 0;
+      const y = ledState.yellow ? 255 : 0;
+
+      publish(T.customRgb, `${r},${g},${y}`);
+    }
+
+    function clearLeds() {
+      ledState = { red: false, green: false, yellow: false };
+      syncLedButtons();
+      publish(T.customRgb, "0,0,0");
+    }
+
+    function resetLeds() {
+      ledState = { red: false, green: false, yellow: false };
+      syncLedButtons();
+    }
+
+
+    function syncLedButtons() {
+      const redSwitch = document.getElementById("redLedSwitch");
+      const greenSwitch = document.getElementById("greenLedSwitch");
+      const yellowSwitch = document.getElementById("yellowLedSwitch");
+
+      if (redSwitch) redSwitch.classList.toggle("on", ledState.red);
+      if (greenSwitch) greenSwitch.classList.toggle("on", ledState.green);
+      if (yellowSwitch) yellowSwitch.classList.toggle("on", ledState.yellow);
+
+      const redStatus = document.getElementById("redLedStatus");
+      const greenStatus = document.getElementById("greenLedStatus");
+      const yellowStatus = document.getElementById("yellowLedStatus");
+
+      if (redStatus) redStatus.textContent = ledState.red ? "On" : "Off";
+      if (greenStatus) greenStatus.textContent = ledState.green ? "On" : "Off";
+      if (yellowStatus) yellowStatus.textContent = ledState.yellow ? "On" : "Off";
+    }
+
+    function toggleMoodLed(color) {
+      moodLedState[color] = !moodLedState[color];
+      syncMoodLedButtons();
+    }
+
+    function syncMoodLedButtons() {
+      document.getElementById("moodRedBtn").classList.toggle("on", moodLedState.red);
+      document.getElementById("moodGreenBtn").classList.toggle("on", moodLedState.green);
+      document.getElementById("moodYellowBtn").classList.toggle("on", moodLedState.yellow);
+    }
+
+    function applyMood() {
+      const brightness = document.getElementById("moodBrightness").value;
+      const fan = document.getElementById("moodFan").value;
+      const curtain = document.getElementById("moodCurtain").value;
+      const temp = document.getElementById("moodTemp").value;
+      const alarm = document.getElementById("moodAlarm").value;
+
+      const r = moodLedState.red ? 255 : 0;
+      const g = moodLedState.green ? 255 : 0;
+      const y = moodLedState.yellow ? 255 : 0;
+
+      publish(T.customBrightness, brightness);
+      publish(T.customRgb, `${r},${g},${y}`);
+      publish(T.customFan, fan);
+      publish(T.customCurtain, curtain);
+      publish(T.customTemp, temp);
+      publish(T.customAlarm, alarm);
       publish(T.mode, "comfort");
-      publish(T.customBrightness, mood.brightness);
-      const red = mood.red ? 255 : 0;
-      const green = mood.green ? 255 : 0;
-      const yellow = mood.yellow ? 255 : 0;
-      publish(T.customRGB, `${red},${green},${yellow}`);
-      publish(T.customFan, mood.fan);
-      publish(T.customCurtain, mood.curtain);
-      publish(T.customTemp, mood.temp);
-      publish(T.customAlarm, mood.alarm);
-    }
-
-    function applyCurrentMood() {
-      applyMood(getCurrentMood());
+      updateModeDisplay("comfort");
     }
 
     function saveMood() {
-      const mood = getCurrentMood();
-      const moods = JSON.parse(localStorage.getItem("ctrlhome_custom_moods") || "[]");
-      const existingIndex = moods.findIndex(item => item.name.toLowerCase() === mood.name.toLowerCase());
+      const mood = {
+        name: document.getElementById("moodName").value || "Custom mood",
+        brightness: document.getElementById("moodBrightness").value,
+        fan: document.getElementById("moodFan").value,
+        curtain: document.getElementById("moodCurtain").value,
+        temp: document.getElementById("moodTemp").value,
+        alarm: document.getElementById("moodAlarm").value,
+        leds: { ...moodLedState }
+      };
 
-      if (existingIndex >= 0) moods[existingIndex] = mood;
-      else moods.push(mood);
-
-      localStorage.setItem("ctrlhome_custom_moods", JSON.stringify(moods));
-      renderMoods();
-    }
-
-    function deleteMood(index) {
-      const moods = JSON.parse(localStorage.getItem("ctrlhome_custom_moods") || "[]");
-      moods.splice(index, 1);
-      localStorage.setItem("ctrlhome_custom_moods", JSON.stringify(moods));
+      const moods = JSON.parse(localStorage.getItem("ctrlhome_moods") || "[]");
+      moods.push(mood);
+      localStorage.setItem("ctrlhome_moods", JSON.stringify(moods));
       renderMoods();
     }
 
     function renderMoods() {
-      const moodList = document.getElementById("moodList");
-      const moods = JSON.parse(localStorage.getItem("ctrlhome_custom_moods") || "[]");
-      moods.forEach(mood => {
-        if (typeof mood.red === "undefined") mood.red = false;
-        if (typeof mood.green === "undefined") mood.green = false;
-        if (typeof mood.yellow === "undefined") mood.yellow = false;
-      });
+      const moods = JSON.parse(localStorage.getItem("ctrlhome_moods") || "[]");
+      const box = document.getElementById("savedMoods");
 
-      if (moods.length === 0) {
-        moodList.innerHTML = `<p class="small">No saved moods yet. Create one above and tap Save Mood.</p>`;
+      if (!moods.length) {
+        box.innerHTML = `
+          <div class="card saved">
+            <div class="saved-title">
+              <strong>No saved moods yet</strong>
+              <span>empty</span>
+            </div>
+            <p>Create your first custom mood above.</p>
+          </div>
+        `;
         return;
       }
 
-      moodList.innerHTML = moods.map((mood, index) => `
-        <div class="mood-card">
-          <div>
-            <strong>${mood.name}</strong>
-            <span>Light ${mood.brightness} • LEDs ${mood.red ? "Red " : ""}${mood.green ? "Green " : ""}${mood.yellow ? "Yellow" : ""} • Fan ${mood.fan} • Curtain ${mood.curtain}° • Temp ${mood.temp}°C • Alarm ${mood.alarm}</span>
+      box.innerHTML = moods.map((mood, index) => `
+        <div class="card saved">
+          <div class="saved-title">
+            <strong>${escapeHtml(mood.name)}</strong>
+            <span>${escapeHtml(mood.fan)} fan</span>
           </div>
-          <div>
-            <button onclick='applyMood(${JSON.stringify(mood)})'>Apply</button>
-            <button class="delete-btn" onclick="deleteMood(${index})">Delete</button>
+          <p>Brightness ${escapeHtml(mood.brightness)}, curtain ${escapeHtml(mood.curtain)}°, temp ${escapeHtml(mood.temp)}°C</p>
+          <div class="btn-grid">
+            <button class="btn primary" onclick="applySavedMood(${index})">Apply</button>
+            <button class="btn" onclick="deleteMood(${index})">Delete</button>
           </div>
         </div>
       `).join("");
     }
 
-    function seedDefaultMoods() {
-      const saved = localStorage.getItem("ctrlhome_custom_moods");
-      if (saved) return;
+    function applySavedMood(index) {
+      const moods = JSON.parse(localStorage.getItem("ctrlhome_moods") || "[]");
+      const mood = moods[index];
+      if (!mood) return;
 
-      const defaultMoods = [
-        { name: "Movie Night", brightness: "40", red: true, green: false, yellow: false, fan: "low", curtain: "10", temp: "24", alarm: "OFF" },
-        { name: "Gaming", brightness: "90", red: false, green: true, yellow: true, fan: "medium", curtain: "50", temp: "23", alarm: "OFF" },
-        { name: "Deep Focus", brightness: "220", red: true, green: true, yellow: true, fan: "medium", curtain: "140", temp: "25", alarm: "OFF" }
-      ];
+      document.getElementById("moodName").value = mood.name;
+      document.getElementById("moodBrightness").value = mood.brightness;
+      document.getElementById("moodFan").value = mood.fan;
+      document.getElementById("moodCurtain").value = mood.curtain;
+      document.getElementById("moodTemp").value = mood.temp;
+      document.getElementById("moodAlarm").value = mood.alarm || "OFF";
+      moodLedState = { ...mood.leds };
 
-      localStorage.setItem("ctrlhome_custom_moods", JSON.stringify(defaultMoods));
+      syncMoodLedButtons();
+      applyMood();
     }
 
-    loadSavedTheme();
-    seedDefaultMoods();
-    renderMoods();
+    function deleteMood(index) {
+      const moods = JSON.parse(localStorage.getItem("ctrlhome_moods") || "[]");
+      moods.splice(index, 1);
+      localStorage.setItem("ctrlhome_moods", JSON.stringify(moods));
+      renderMoods();
+    }
+
+    function showValue(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function toggleNotifications() {
+      if (notificationsEnabled) {
+        notificationsEnabled = false;
+        localStorage.setItem("ctrlhome_notifications", "off");
+        syncNotificationSwitch();
+        return;
+      }
+
+      if (!("Notification" in window)) {
+        alert("Browser notifications are not supported");
+        return;
+      }
+
+      Notification.requestPermission().then(permission => {
+        notificationsEnabled = permission === "granted";
+        localStorage.setItem("ctrlhome_notifications", notificationsEnabled ? "on" : "off");
+        syncNotificationSwitch();
+      });
+    }
+
+    function syncNotificationSwitch() {
+      document.getElementById("notificationSwitch").classList.toggle("on", notificationsEnabled);
+    }
+
+    function enableNotifications() {
+      toggleNotifications();
+    }
+
+    function notifyPhone(message) {
+      if (!notificationsEnabled) return;
+      if (!message || message === "All sensors normal") return;
+
+      if ("vibrate" in navigator) {
+        navigator.vibrate([100, 50, 100]);
+      }
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Ctrl+Home", { body: message });
+      }
+    }
+
+    function setTheme(theme) {
+      localStorage.setItem("ctrlhome_theme", theme);
+      document.body.classList.toggle("dark-theme", theme === "dark");
+
+      document.getElementById("defaultThemeBtn").classList.toggle("active", theme === "default");
+      document.getElementById("darkThemeBtn").classList.toggle("active", theme === "dark");
+
+      const themeColor = theme === "dark" ? "#0f1117" : "#f3f4f6";
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", themeColor);
+    }
+
+
+
+    function loadIcons() {
+      document.querySelectorAll("[data-icon]").forEach(el => {
+        const name = el.dataset.icon;
+        el.innerHTML = iconSvg[name] || iconSvg.manual;
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    window.addEventListener("load", () => {
+      loadIcons();
+
+      const theme = localStorage.getItem("ctrlhome_theme") || "default";
+      setTheme(theme);
+
+      notificationsEnabled = localStorage.getItem("ctrlhome_notifications") === "on";
+      syncNotificationSwitch();
+
+      renderMoods();
+      syncLedButtons();
+      syncMoodLedButtons();
+      selectedFan = "off";
+      selectedAlarm = "OFF";
+      syncLightControl();
+      syncFanButtons();
+      syncCurtainControl();
+      syncAlarmButtons();
+      updateModeDisplay("manual");
+
+      setTimeout(connectMQTT, 500);
+    });
   </script>
 </body>
 </html>
