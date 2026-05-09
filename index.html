@@ -893,9 +893,19 @@
     }
 
   
-    
+    .logo.cplus-logo {
+      background: var(--dark);
+      color: white;
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: -1.2px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
 
-    
+    .logo.cplus-logo .plus {
+      color: var(--accent);
+      margin: 0 1px;
+    }
 
     .mini-switch-row {
       display: grid;
@@ -929,22 +939,74 @@
     .mini-switch-item.yellow strong { color: #ca8a04; }
 
   
-    .logo.c-logo{
-      width:56px;
-      height:56px;
-      border-radius:18px;
-      background:#0b1020;
-      color:white;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:34px;
-      font-weight:900;
-      letter-spacing:-2px;
-      box-shadow:0 10px 22px rgba(11,16,32,.18);
+    .logo.c-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: #0f172a;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 950;
+      letter-spacing: -2px;
+      box-shadow: 0 10px 24px rgba(15,23,42,.18);
+      flex: 0 0 auto;
+    }
+        
+    .mode-icon,
+    .quick-icon,
+    .mode-dot {
+      display: grid !important;
+      place-items: center !important;
+      overflow: visible !important;
     }
 
-</style>
+    .mode-icon svg,
+    .quick-icon svg,
+    .mode-dot svg {
+      display: block !important;
+      width: 20px !important;
+      height: 20px !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      fill: none !important;
+      stroke: currentColor !important;
+      stroke-width: 2.3 !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+    }
+
+    .mode-dot svg {
+      stroke: white !important;
+      width: 22px !important;
+      height: 22px !important;
+    }
+
+
+    .mode-icon svg,
+    .quick-icon svg,
+    .mode-dot svg {
+      width: 20px !important;
+      height: 20px !important;
+      display: block !important;
+      fill: none !important;
+      stroke: currentColor !important;
+      stroke-width: 2.3 !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+
+    .mode-dot svg {
+      stroke: #ffffff !important;
+      width: 22px !important;
+      height: 22px !important;
+    }
+
+  </style>
 
   <link id="appleIcon" rel="apple-touch-icon" href="data:image/svg+xml,<svg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27><rect%20width=%27100%27%20height=%27100%27%20rx=%2724%27%20fill=%27%23171923%27/><text%20x=%2750%27%20y=%2762%27%20text-anchor=%27middle%27%20font-family=%27Arial,sans-serif%27%20font-size=%2734%27%20font-weight=%27900%27%20fill=%27white%27>C+H</text><path%20d=%27M42%2062h16M50%2054v16%27%20stroke=%27%23dc2626%27%20stroke-width=%275%27%20stroke-linecap=%27round%27/></svg>">
   <link id="browserIcon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27><rect%20width=%27100%27%20height=%27100%27%20rx=%2724%27%20fill=%27%23171923%27/><text%20x=%2750%27%20y=%2762%27%20text-anchor=%27middle%27%20font-family=%27Arial,sans-serif%27%20font-size=%2734%27%20font-weight=%27900%27%20fill=%27white%27>C+H</text><path%20d=%27M42%2062h16M50%2054v16%27%20stroke=%27%23dc2626%27%20stroke-width=%275%27%20stroke-linecap=%27round%27/></svg>">
@@ -976,7 +1038,7 @@
           <div>
             <div class="eyebrow">Current mode</div>
             <div class="current-mode">
-              <span id="heroModeIcon" class="mode-dot"></span>
+              <span id="heroModeIcon" class="mode-dot"><svg viewBox="0 0 24 24"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></svg></span>
               <span id="heroMode">Manual</span>
             </div>
           </div>
@@ -992,17 +1054,17 @@
 
       <div class="quick-row">
         <button class="quick study" onclick="setMode('study')">
-          <div class="quick-icon" data-icon="study"></div>
+          <div class="quick-icon" data-icon="study"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"/><path d="M8 7h8M8 11h8"/></svg></div>
           <strong>Study</strong>
           <span>bright light</span>
         </button>
         <button class="quick energy" onclick="setMode('energy')">
-          <div class="quick-icon" data-icon="energy"></div>
+          <div class="quick-icon" data-icon="energy"><svg viewBox="0 0 24 24"><path d="M5 13c6.5-9 13-8 14-8 0 1 .2 8-7 12-3.2 1.8-6 1-7 0Z"/><path d="M5 17c3-1 6-3 9-7"/></svg></div>
           <strong>Energy</strong>
           <span>save power</span>
         </button>
         <button class="quick emergency" onclick="setMode('emergency')">
-          <div class="quick-icon" data-icon="emergency"></div>
+          <div class="quick-icon" data-icon="emergency"><svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg></div>
           <strong>Emergency</strong>
           <span>alarm mode</span>
         </button>
@@ -1090,27 +1152,27 @@
 
         <div class="modes-grid">
           <button class="mode-btn" data-mode="sleep" onclick="setMode('sleep')" style="--mode-color:#7c3aed">
-            <div class="mode-icon" data-icon="sleep"></div>
+            <div class="mode-icon" data-icon="sleep"><svg viewBox="0 0 24 24"><path d="M20 15.5A7.8 7.8 0 0 1 8.5 4a8 8 0 1 0 11.5 11.5Z"/></svg></div>
             <strong>Sleep</strong><span>dim room, quiet fan</span>
           </button>
           <button class="mode-btn" data-mode="study" onclick="setMode('study')" style="--mode-color:#2563eb">
-            <div class="mode-icon" data-icon="study"></div>
+            <div class="mode-icon" data-icon="study"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"/><path d="M8 7h8M8 11h8"/></svg></div>
             <strong>Study</strong><span>bright room</span>
           </button>
           <button class="mode-btn" data-mode="relax" onclick="setMode('relax')" style="--mode-color:#0d9488">
-            <div class="mode-icon" data-icon="relax"></div>
+            <div class="mode-icon" data-icon="relax"><svg viewBox="0 0 24 24"><path d="M6 8h12v5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5V8Z"/><path d="M18 9h1.5a2.5 2.5 0 0 1 0 5H18"/><path d="M7 21h10"/></svg></div>
             <strong>Relax</strong><span>soft light</span>
           </button>
           <button class="mode-btn" data-mode="away" onclick="setMode('away')" style="--mode-color:#475569">
-            <div class="mode-icon" data-icon="away"></div>
+            <div class="mode-icon" data-icon="away"><svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M12 15v2"/></svg></div>
             <strong>Away</strong><span>security watch</span>
           </button>
           <button class="mode-btn" data-mode="energy" onclick="setMode('energy')" style="--mode-color:#16a34a">
-            <div class="mode-icon" data-icon="energy"></div>
+            <div class="mode-icon" data-icon="energy"><svg viewBox="0 0 24 24"><path d="M5 13c6.5-9 13-8 14-8 0 1 .2 8-7 12-3.2 1.8-6 1-7 0Z"/><path d="M5 17c3-1 6-3 9-7"/></svg></div>
             <strong>Energy</strong><span>reduce usage</span>
           </button>
           <button class="mode-btn" data-mode="emergency" onclick="setMode('emergency')" style="--mode-color:#dc2626">
-            <div class="mode-icon" data-icon="emergency"></div>
+            <div class="mode-icon" data-icon="emergency"><svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg></div>
             <strong>Emergency</strong><span>alarm output</span>
           </button>
         </div>
@@ -1323,6 +1385,30 @@
         </div>
       </div>
 
+
+      <div class="section">
+        <div class="section-head">
+          <h2>Topic settings</h2>
+          <span>device ID</span>
+        </div>
+
+        <div class="card control-card">
+          <div class="field">
+            <label>Device ID</label>
+            <input id="deviceIdInput" value="B6737115" placeholder="B6737115">
+          </div>
+
+          <div class="btn-grid">
+            <button class="btn primary" onclick="saveDeviceId()">Save ID</button>
+            <button class="btn" onclick="resetDeviceId()">Reset</button>
+          </div>
+
+          <p style="margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.45;">
+            Type only the board ID, for example: B6737115. The app will automatically create topics like ctrlhome/B6737115/temperature and ctrlhome/B6737115/light/control.
+          </p>
+        </div>
+      </div>
+
       <div class="section">
         <div class="section-head">
           <h2>App settings</h2>
@@ -1363,38 +1449,50 @@
   </nav>
 
   <script>
-    const BASE = "ctrlhome/B6737115";
+    let DEVICE_ID = localStorage.getItem("ctrlhome_device_id") || "B6737115";
+    let BASE = "ctrlhome/" + DEVICE_ID;
 
-    const T = {
-      temperature: BASE + "/temperature",
-      humidity: BASE + "/humidity",
-      light: BASE + "/light",
-      motion: BASE + "/motion",
-      gas: BASE + "/gas",
-      water: BASE + "/water",
-      potentiometer: BASE + "/potentiometer",
-      alert: BASE + "/alert",
-      currentMode: BASE + "/currentmode",
+    let T = {};
 
-      mode: BASE + "/mode",
-      lightControl: BASE + "/light/control",
-      fanControl: BASE + "/fan/control",
-      curtainControl: BASE + "/curtain/control",
-      alarmControl: BASE + "/alarm/control",
+    function cleanDeviceId(value) {
+      return String(value || "B6737115").trim().replace(/^\/+|\/+$/g, "");
+    }
 
-      customBrightness: BASE + "/custom/brightness",
-      customRgb: BASE + "/custom/rgb",
-      customFan: BASE + "/custom/fan",
-      customCurtain: BASE + "/custom/curtain",
-      customAlarm: BASE + "/custom/alarm",
-      customTemp: BASE + "/custom/temp",
+    function buildTopics() {
+      DEVICE_ID = cleanDeviceId(DEVICE_ID);
+      BASE = "ctrlhome/" + DEVICE_ID;
 
-      statusLight: BASE + "/status/light",
-      statusFan: BASE + "/status/fan",
-      statusCurtain: BASE + "/status/curtain",
-      statusRgb: BASE + "/status/rgb",
-      statusAlarm: BASE + "/status/alarm"
-    };
+      T = {
+        temperature: BASE + "/temperature",
+        humidity: BASE + "/humidity",
+        light: BASE + "/light",
+        motion: BASE + "/motion",
+        gas: BASE + "/gas",
+        water: BASE + "/water",
+        potentiometer: BASE + "/potentiometer",
+        alert: BASE + "/alert",
+        currentMode: BASE + "/currentmode",
+
+        mode: BASE + "/mode",
+        lightControl: BASE + "/light/control",
+        fanControl: BASE + "/fan/control",
+        curtainControl: BASE + "/curtain/control",
+        alarmControl: BASE + "/alarm/control",
+
+        customBrightness: BASE + "/custom/brightness",
+        customRgb: BASE + "/custom/rgb",
+        customFan: BASE + "/custom/fan",
+        customCurtain: BASE + "/custom/curtain",
+        customAlarm: BASE + "/custom/alarm",
+        customTemp: BASE + "/custom/temp",
+
+        statusLight: BASE + "/status/light",
+        statusFan: BASE + "/status/fan",
+        statusCurtain: BASE + "/status/curtain",
+        statusRgb: BASE + "/status/rgb",
+        statusAlarm: BASE + "/status/alarm"
+      };
+    }
 
     let client = null;
     let ledState = { red: false, green: false, yellow: false };
@@ -1443,7 +1541,48 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    function saveDeviceId() {
+      const input = document.getElementById("deviceIdInput");
+      DEVICE_ID = cleanDeviceId(input.value);
+      input.value = DEVICE_ID;
+
+      localStorage.setItem("ctrlhome_device_id", DEVICE_ID);
+      buildTopics();
+
+      if (client) {
+        client.end(true);
+        client = null;
+      }
+
+      document.getElementById("connText").textContent = "Offline";
+      document.getElementById("connDot").classList.remove("online");
+
+      setTimeout(connectMQTT, 300);
+      alert("Device ID saved: " + DEVICE_ID + "\nBase topic: " + BASE);
+    }
+
+    function resetDeviceId() {
+      DEVICE_ID = "B6737115";
+      localStorage.setItem("ctrlhome_device_id", DEVICE_ID);
+
+      const input = document.getElementById("deviceIdInput");
+      if (input) input.value = DEVICE_ID;
+
+      buildTopics();
+
+      if (client) {
+        client.end(true);
+        client = null;
+      }
+
+      document.getElementById("connText").textContent = "Offline";
+      document.getElementById("connDot").classList.remove("online");
+
+      setTimeout(connectMQTT, 300);
+    }
+
     function connectMQTT() {
+      buildTopics();
       const broker = document.getElementById("brokerInput").value.trim();
 
       if (!broker) {
@@ -1638,10 +1777,13 @@
     }
 
     function resetLight() {
-      lightPending = lightApplied;
-      document.getElementById("lightSlider").value = lightApplied;
-      showValue("lightValue", lightApplied);
+      if (!lightPower) return;
+      lightPending = 0;
+      lightApplied = 0;
+      document.getElementById("lightSlider").value = 0;
+      showValue("lightValue", "0");
       document.getElementById("lightConfirmBtn").classList.remove("pending");
+      publish(T.lightControl, 0);
     }
 
     function setLight(value) {
@@ -1718,10 +1860,13 @@
     }
 
     function resetCurtain() {
-      curtainPending = curtainApplied;
-      document.getElementById("curtainSlider").value = curtainApplied;
-      showValue("curtainValue", curtainApplied + "°");
+      if (!curtainPower) return;
+      curtainPending = 90;
+      curtainApplied = 90;
+      document.getElementById("curtainSlider").value = 90;
+      showValue("curtainValue", "90°");
       document.getElementById("curtainConfirmBtn").classList.remove("pending");
+      publish(T.curtainControl, 90);
     }
 
     function setCurtain(value) {
@@ -1969,9 +2114,14 @@
 
     function loadIcons() {
       document.querySelectorAll("[data-icon]").forEach(el => {
-        const name = el.dataset.icon;
+        const name = el.getAttribute("data-icon");
         el.innerHTML = iconSvg[name] || iconSvg.manual;
       });
+
+      const heroIcon = document.getElementById("heroModeIcon");
+      if (heroIcon && !heroIcon.innerHTML.trim()) {
+        heroIcon.innerHTML = iconSvg.manual;
+      }
     }
 
     function escapeHtml(value) {
@@ -1984,6 +2134,11 @@
     }
 
     window.addEventListener("load", () => {
+      loadIcons();
+      DEVICE_ID = cleanDeviceId(localStorage.getItem("ctrlhome_device_id") || DEVICE_ID);
+      buildTopics();
+      const deviceIdInput = document.getElementById("deviceIdInput");
+      if (deviceIdInput) deviceIdInput.value = DEVICE_ID;
       loadIcons();
 
       const theme = localStorage.getItem("ctrlhome_theme") || "default";
