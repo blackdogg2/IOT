@@ -1006,6 +1006,68 @@
       height: 22px !important;
     }
 
+  
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 78px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .status-safe {
+      background: rgba(22, 163, 74, 0.14);
+      color: #15803d;
+    }
+
+    .status-warning {
+      background: rgba(202, 138, 4, 0.16);
+      color: #a16207;
+    }
+
+    .status-danger {
+      background: rgba(220, 38, 38, 0.14);
+      color: #b91c1c;
+    }
+
+    .water-box {
+      width: 100%;
+    }
+
+    .water-text {
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .water-bar {
+      width: 100%;
+      height: 13px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .water-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #38bdf8, #2563eb);
+      transition: width 0.35s ease;
+    }
+
+    .water-percent {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
   </style>
 
   <link id="appleIcon" rel="apple-touch-icon" href="data:image/svg+xml,<svg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27><rect%20width=%27100%27%20height=%27100%27%20rx=%2724%27%20fill=%27%23171923%27/><text%20x=%2750%27%20y=%2762%27%20text-anchor=%27middle%27%20font-family=%27Arial,sans-serif%27%20font-size=%2734%27%20font-weight=%27900%27%20fill=%27white%27>C+H</text><path%20d=%27M42%2062h16M50%2054v16%27%20stroke=%27%23dc2626%27%20stroke-width=%275%27%20stroke-linecap=%27round%27/></svg>">
@@ -1656,11 +1718,11 @@
         document.getElementById("heroHum").textContent = Number.isFinite(value) ? Math.round(value) + "% RH" : "--% RH";
       }
 
-      if (topic === T.light) document.getElementById("light").textContent = message;
+      if (topic === T.light) updateLightLevel(message);
       if (topic === T.motion) document.getElementById("motion").textContent = message;
-      if (topic === T.gas) document.getElementById("gas").textContent = message;
-      if (topic === T.water) document.getElementById("water").textContent = message;
-      if (topic === T.potentiometer) document.getElementById("potentiometer").textContent = message;
+      if (topic === T.gas) updateGasSafety(message);
+      if (topic === T.water) updateWaterTank(message);
+      if (topic === T.potentiometer) updatePotentiometer(message);
 
       if (topic === T.currentMode) {
         updateModeDisplay(message);
@@ -1722,6 +1784,96 @@
         selectedAlarm = message;
         syncAlarmButtons();
       }
+    }
+
+
+    function numberFromMessage(message) {
+      const match = String(message).match(/-?\d+(\.\d+)?/);
+      return match ? Number(match[0]) : NaN;
+    }
+
+    function percentFromAnalog(value) {
+      if (!Number.isFinite(value)) return 0;
+      return Math.max(0, Math.min(100, Math.round((value / 4095) * 100)));
+    }
+
+    function updateLightLevel(message) {
+      const value = numberFromMessage(message);
+      const box = document.getElementById("light");
+
+      if (!Number.isFinite(value)) {
+        box.textContent = message;
+        return;
+      }
+
+      let label = "Bright";
+      let cls = "status-safe";
+
+      if (value >= 2800) {
+        label = "Dark";
+        cls = "status-danger";
+      } else if (value >= 1200) {
+        label = "Dim";
+        cls = "status-warning";
+      }
+
+      box.innerHTML = `<span class="status-badge ${cls}">${label}</span>`;
+    }
+
+    function updatePotentiometer(message) {
+      const value = numberFromMessage(message);
+      const percent = percentFromAnalog(value);
+      document.getElementById("potentiometer").textContent = percent + "%";
+    }
+
+    function updateGasSafety(message) {
+      const value = numberFromMessage(message);
+      const box = document.getElementById("gas");
+
+      if (!Number.isFinite(value)) {
+        box.textContent = message;
+        return;
+      }
+
+      let label = "Safe";
+      let cls = "status-safe";
+
+      if (value >= 2000) {
+        label = "Danger";
+        cls = "status-danger";
+      } else if (value >= 1200) {
+        label = "Warning";
+        cls = "status-warning";
+      }
+
+      box.innerHTML = `<span class="status-badge ${cls}">${label}</span>`;
+    }
+
+    function updateWaterTank(message) {
+      const value = numberFromMessage(message);
+      let percent = 0;
+
+      if (String(message).includes("%")) {
+        percent = Math.max(0, Math.min(100, Math.round(value)));
+      } else {
+        percent = percentFromAnalog(value);
+      }
+
+      let label = "Empty";
+      if (percent >= 90) label = "Full";
+      else if (percent >= 70) label = "Almost Full";
+      else if (percent >= 35) label = "Medium";
+      else if (percent >= 10) label = "Low";
+
+      document.getElementById("water").innerHTML = `
+        <div class="water-box">
+          <div class="water-text">${label}</div>
+          <div class="water-bar">
+            <div class="water-fill" style="width:${percent}%"></div>
+          </div>
+          <div class="water-percent">${percent}% filled</div>
+        </div>
+      `;
     }
 
     function updateModeDisplay(mode) {
