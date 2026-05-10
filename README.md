@@ -492,7 +492,7 @@ Connect the ESP32 to your computer and upload the code.
 Open:
 
 ```text
-index(3).html
+index.html
 ```
 
 You can open it directly in a browser or host it using GitHub Pages.
@@ -600,8 +600,8 @@ Message: ON
 ```text
 Ctrl-Home/
 │
-├── IOT_project(1).ino
-├── index(3).html
+├── IOT_project.ino
+├── index.html
 └── README.md
 ```
 
