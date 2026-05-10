@@ -1,34 +1,8 @@
 # Ctrl+Home — Smart Home IoT Dashboard
 
-Ctrl+Home is a smart home IoT project using an **ESP32**, sensors, MQTT communication, and a mobile-friendly **HTML web dashboard**.  
+Ctrl+Home is a smart home IoT project using an **ESP32**, sensors, MQTT communication, and a mobile-friendly **HTML web dashboard**.
+
 The system monitors real-time room conditions, controls smart home devices, and reacts automatically to unsafe sensor readings.
-
----
-
-## Project Structure
-
-```text
-Ctrl-Home/
-│
-├── assets/
-│   ├── existing-flowchart.png
-│   └── project-scoring-breakdown.png
-│
-├── diagrams/
-│   └── IoT-diagram.png
-│
-├── report/
-│   ├── Architecture_Explanation.md
-│   └── Smart_Home_IoT_Final_Report.md
-│
-├── screenshots/
-│   └── ctrlhome-demo-home.png
-│
-├── IOT_project.ino
-├── README.md
-├── SECURITY.md
-└── index.html
-```
 
 ---
 
@@ -56,6 +30,29 @@ The dashboard can be opened from a browser on a phone or laptop. It connects to 
 - Light level status
 - Potentiometer percentage display
 - Dark theme support
+
+---
+
+## Project Structure
+
+```text
+Ctrl-Home/
+├── IOT_project.ino
+├── index.html
+├── README.md
+├── SECURITY.md
+├── report/
+├── diagrams/
+├── assets/
+└── screenshots/
+```
+
+- `IOT_project.ino` contains the ESP32 Arduino code.
+- `index.html` contains the web dashboard.
+- `report/` contains the final report and architecture explanation.
+- `diagrams/` contains the IoT system diagram.
+- `assets/` contains extra project images.
+- `screenshots/` contains dashboard preview images.
 
 ---
 
@@ -120,12 +117,6 @@ See the full architecture explanation here:
 report/Architecture_Explanation.md
 ```
 
-System diagram:
-
-```md
-![IoT Diagram](diagrams/IoT-diagram.png)
-```
-
 ---
 
 ## Web Dashboard
@@ -144,12 +135,6 @@ The dashboard includes four pages:
 | Control | Controls light, fan, curtain, LEDs, and alarm |
 | Mood | Creates and saves custom mood settings |
 | Settings | Configures MQTT broker, device ID, notifications, and theme |
-
-Dashboard screenshot:
-
-```md
-![Ctrl+Home Dashboard](screenshots/ctrlhome-demo-home.png)
-```
 
 ---
 
@@ -238,27 +223,6 @@ ctrlhome/B6737115/curtain/control
 ctrlhome/B6737115/alarm/control
 ```
 
-### Custom Mood Topics
-
-```text
-ctrlhome/B6737115/custom/brightness
-ctrlhome/B6737115/custom/rgb
-ctrlhome/B6737115/custom/fan
-ctrlhome/B6737115/custom/curtain
-ctrlhome/B6737115/custom/alarm
-ctrlhome/B6737115/custom/temp
-```
-
-### Status Topics
-
-```text
-ctrlhome/B6737115/status/light
-ctrlhome/B6737115/status/fan
-ctrlhome/B6737115/status/curtain
-ctrlhome/B6737115/status/rgb
-ctrlhome/B6737115/status/alarm
-```
-
 ---
 
 ## Smart Modes
@@ -273,36 +237,6 @@ ctrlhome/B6737115/status/alarm
 | Energy | Reduced power usage |
 | Emergency | Alarm, full light, high fan, and red warning LED |
 | Comfort | Custom mood mode |
-
----
-
-## Sensor Display Logic
-
-### Light Level
-
-| LDR Value | Status |
-|---:|---|
-| Below 1200 | Bright |
-| 1200 to 2799 | Dim |
-| 2800 and above | Dark |
-
-### Gas Safety
-
-| Gas Value | Status |
-|---:|---|
-| Below 1200 | Safe |
-| 1200 to 1999 | Warning |
-| 2000 and above | Danger |
-
-### Water Tank
-
-| Percentage | Status |
-|---:|---|
-| Below 10% | Empty |
-| 10% to 34% | Low |
-| 35% to 69% | Medium |
-| 70% to 89% | Almost Full |
-| 90% and above | Full |
 
 ---
 
@@ -350,31 +284,6 @@ Check that the Device ID matches the ESP32 topic ID:
 ```text
 B6737115
 ```
-
----
-
-## Report Files
-
-The project report files are stored in:
-
-```text
-report/
-```
-
-| File | Description |
-|---|---|
-| `Architecture_Explanation.md` | Technical architecture explanation |
-| `Smart_Home_IoT_Final_Report.md` | Final course report |
-
----
-
-## Assets and Diagrams
-
-| Folder | Description |
-|---|---|
-| `assets/` | Project flowchart and scoring breakdown images |
-| `diagrams/` | IoT architecture diagram |
-| `screenshots/` | Dashboard screenshots |
 
 ---
 
