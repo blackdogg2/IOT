@@ -132,6 +132,12 @@ The dashboard was developed in:
 index.html
 ```
 
+It is hosted using GitHub Pages:
+
+```text
+https://blackdogg2.github.io/IOT/
+```
+
 It uses HTML, CSS, JavaScript, and MQTT.js.
 
 ### Step 5: Testing
@@ -232,6 +238,12 @@ ctrlhome/B6737115/alarm/control
 ---
 
 ## 11. Dashboard Design
+
+The dashboard can be accessed online through GitHub Pages:
+
+```text
+https://blackdogg2.github.io/IOT/
+```
 
 The dashboard has four main pages.
 
