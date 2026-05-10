@@ -6,8 +6,8 @@ The ESP32 reads sensors, controls output devices, publishes live data, and recei
 This project includes two main files:
 
 ```text
-IOT_project(1).ino   # ESP32 Arduino code
-index(3).html        # Web dashboard
+IOT_project.ino   # ESP32 Arduino code
+index.html        # Web dashboard
 ```
 
 ---
