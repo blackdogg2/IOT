@@ -1,33 +1,6 @@
 # Architecture Explanation — Ctrl+Home Smart Home IoT System
 
-## 1. Project Structure
-
-```text
-Ctrl-Home/
-│
-├── assets/
-│   ├── existing-flowchart.png
-│   └── project-scoring-breakdown.png
-│
-├── diagrams/
-│   └── IoT-diagram.png
-│
-├── report/
-│   ├── Architecture_Explanation.md
-│   └── Smart_Home_IoT_Final_Report.md
-│
-├── screenshots/
-│   └── ctrlhome-demo-home.png
-│
-├── IOT_project.ino
-├── README.md
-├── SECURITY.md
-└── index.html
-```
-
----
-
-## 2. Architecture Overview
+## 1. Architecture Overview
 
 Ctrl+Home uses a publish/subscribe IoT architecture.
 
@@ -42,7 +15,7 @@ When the user controls a device from the dashboard, the dashboard publishes a co
 
 ---
 
-## 3. Main System Diagram
+## 2. Main System Diagram
 
 ```md
 ![IoT Diagram](../diagrams/IoT-diagram.png)
@@ -50,7 +23,7 @@ When the user controls a device from the dashboard, the dashboard publishes a co
 
 ---
 
-## 4. Architecture Flow
+## 3. Architecture Flow
 
 ```text
 +---------------------------+
@@ -98,13 +71,7 @@ When the user controls a device from the dashboard, the dashboard publishes a co
 
 ---
 
-## 5. ESP32 Layer
-
-Main file:
-
-```text
-IOT_project.ino
-```
+## 4. ESP32 Layer
 
 The ESP32 is responsible for:
 
@@ -120,13 +87,7 @@ The ESP32 is responsible for:
 
 ---
 
-## 6. Web Dashboard Layer
-
-Main file:
-
-```text
-index.html
-```
+## 5. Web Dashboard Layer
 
 The dashboard is responsible for:
 
@@ -138,7 +99,7 @@ The dashboard is responsible for:
 - Showing alerts
 - Allowing device ID configuration
 
-The dashboard uses:
+The dashboard uses MQTT.js:
 
 ```html
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -146,7 +107,7 @@ The dashboard uses:
 
 ---
 
-## 7. MQTT Broker Layer
+## 6. MQTT Broker Layer
 
 Broker used:
 
@@ -174,7 +135,7 @@ ESP32 MQTT TCP → HiveMQ Broker ← Browser MQTT WebSocket
 
 ---
 
-## 8. MQTT Topic Design
+## 7. MQTT Topic Design
 
 Default device ID:
 
@@ -192,7 +153,7 @@ All MQTT topics are created using this base topic.
 
 ---
 
-## 9. Sensor Data Topics
+## 8. Sensor Data Topics
 
 ```text
 ctrlhome/B6737115/temperature
@@ -214,7 +175,7 @@ DHT11 → ESP32 → ctrlhome/B6737115/temperature → Dashboard
 
 ---
 
-## 10. Control Command Topics
+## 9. Control Command Topics
 
 ```text
 ctrlhome/B6737115/mode
@@ -232,7 +193,7 @@ Dashboard Fan Button → ctrlhome/B6737115/fan/control → ESP32 → Fan Output
 
 ---
 
-## 11. Output Status Topics
+## 10. Output Status Topics
 
 ```text
 ctrlhome/B6737115/status/light
@@ -246,7 +207,7 @@ These topics allow the ESP32 to confirm output states back to the dashboard.
 
 ---
 
-## 12. Hardware Architecture
+## 11. Hardware Architecture
 
 ### Sensor Inputs
 
@@ -280,7 +241,7 @@ These topics allow the ESP32 to confirm output states back to the dashboard.
 
 ---
 
-## 13. Smart Mode Logic
+## 12. Smart Mode Logic
 
 The project supports these smart modes:
 
@@ -297,7 +258,7 @@ The project supports these smart modes:
 
 ---
 
-## 14. Emergency Logic
+## 13. Emergency Logic
 
 Emergency mode can be triggered by:
 
@@ -319,7 +280,7 @@ LCD → Emergency message
 
 ---
 
-## 15. Why WebSocket Is Used
+## 14. Why WebSocket Is Used
 
 The ESP32 can connect to MQTT directly using TCP port `1883`.
 
@@ -336,29 +297,7 @@ This lets the web dashboard control the ESP32 from a phone or laptop browser.
 
 ---
 
-## 16. Image Assets Used
-
-### Project Flowchart
-
-```md
-![Existing Flowchart](../assets/existing-flowchart.png)
-```
-
-### Project Scoring Breakdown
-
-```md
-![Project Scoring Breakdown](../assets/project-scoring-breakdown.png)
-```
-
-### Dashboard Screenshot
-
-```md
-![Ctrl+Home Dashboard](../screenshots/ctrlhome-demo-home.png)
-```
-
----
-
-## 17. Summary
+## 15. Summary
 
 The Ctrl+Home architecture demonstrates the main parts of an IoT system:
 
