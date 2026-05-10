@@ -471,7 +471,7 @@ Install the required libraries:
 Open:
 
 ```text
-IOT_project(1).ino
+IOT_project.ino
 ```
 
 ### 3. Update WiFi Information
