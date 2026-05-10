@@ -63,6 +63,8 @@ When the user controls a device from the dashboard, the dashboard publishes a co
 +-------------+-------------+
 |      Web Dashboard        |
 |---------------------------|
+| GitHub Pages hosted app   |
+| https://blackdogg2.github.io/IOT/ |
 | index.html                |
 | HTML/CSS/JavaScript       |
 | MQTT.js                   |
@@ -88,6 +90,18 @@ The ESP32 is responsible for:
 ---
 
 ## 5. Web Dashboard Layer
+
+The dashboard is hosted on GitHub Pages:
+
+```text
+https://blackdogg2.github.io/IOT/
+```
+
+The local dashboard file is:
+
+```text
+index.html
+```
 
 The dashboard is responsible for:
 
