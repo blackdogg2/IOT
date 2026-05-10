@@ -140,6 +140,12 @@ ctrlhome/device_a92f7x/home/temperature
 
 ## 7. Dashboard Security
 
+The dashboard is hosted on GitHub Pages:
+
+```text
+https://blackdogg2.github.io/IOT/
+```
+
 The dashboard file is:
 
 ```text
@@ -154,6 +160,7 @@ Do not put secrets in:
 - JavaScript variables
 - Browser localStorage
 - GitHub Pages frontend code
+- Any public repository file
 
 ---
 
