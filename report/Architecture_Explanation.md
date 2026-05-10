@@ -1,234 +1,180 @@
 # Architecture Explanation — Ctrl+Home Smart Home IoT System
 
-## 1. Project Name
-
-**Ctrl+Home — Smart Home IoT Dashboard**
-
-Ctrl+Home is an IoT smart home system that uses an **ESP32**, sensors, output devices, MQTT communication, and a browser-based web dashboard. The system can monitor real-time room conditions and control devices remotely.
-
-Main files:
+## 1. Project Structure
 
 ```text
-IOT_project(1).ino
-index(3).html
+Ctrl-Home/
+│
+├── assets/
+│   ├── existing-flowchart.png
+│   └── project-scoring-breakdown.png
+│
+├── diagrams/
+│   └── IoT-diagram.png
+│
+├── report/
+│   ├── Architecture_Explanation.md
+│   └── Smart_Home_IoT_Final_Report.md
+│
+├── screenshots/
+│   └── ctrlhome-demo-home.png
+│
+├── IOT_project.ino
+├── README.md
+├── SECURITY.md
+└── index.html
 ```
 
 ---
 
 ## 2. Architecture Overview
 
-The system is built using a simple IoT communication architecture:
+Ctrl+Home uses a publish/subscribe IoT architecture.
 
 ```text
 Sensors → ESP32 → MQTT Broker → Web Dashboard
 Web Dashboard → MQTT Broker → ESP32 → Output Devices
 ```
 
-The ESP32 works as the physical IoT device. It reads sensors and controls hardware outputs.  
-The web dashboard works as the user interface. It displays data and sends commands.
+The ESP32 reads data from sensors and publishes it to the MQTT broker.  
+The dashboard subscribes to the sensor topics and updates the user interface.  
+When the user controls a device from the dashboard, the dashboard publishes a command to MQTT, and the ESP32 receives it.
 
 ---
 
-## 3. Main Architecture Diagram
+## 3. Main System Diagram
+
+```md
+![IoT Diagram](../diagrams/IoT-diagram.png)
+```
+
+---
+
+## 4. Architecture Flow
 
 ```text
-+-----------------------------+
-|        Sensor Layer         |
-|-----------------------------|
-| DHT11 Temperature/Humidity  |
-| LDR Light Sensor            |
-| PIR Motion Sensor           |
-| MQ-2 Gas Sensor             |
-| Water Level Sensor          |
-| Potentiometer               |
-+-------------+---------------+
++---------------------------+
+|        Sensors            |
+|---------------------------|
+| DHT11                     |
+| LDR                       |
+| PIR                       |
+| MQ-2                      |
+| Water Level Sensor        |
+| Potentiometer             |
++-------------+-------------+
               |
               v
-+-----------------------------+
-|      ESP32 Controller       |
-|-----------------------------|
-| Reads sensor values         |
-| Processes safety logic      |
-| Controls outputs            |
-| Publishes MQTT data         |
-| Subscribes to commands      |
-+-------------+---------------+
++---------------------------+
+|          ESP32            |
+|---------------------------|
+| Reads sensor values       |
+| Processes safety logic    |
+| Controls outputs          |
+| Publishes MQTT data       |
+| Receives MQTT commands    |
++-------------+-------------+
               |
-              | MQTT TCP Port 1883
+              | MQTT TCP 1883
               v
-+-----------------------------+
-|        MQTT Broker          |
-|-----------------------------|
-| broker.hivemq.com           |
-| Message routing             |
-| Publish / Subscribe system  |
-+-------------+---------------+
++---------------------------+
+|       MQTT Broker         |
+|---------------------------|
+| broker.hivemq.com         |
+| Routes messages by topic  |
++-------------+-------------+
               ^
-              | MQTT over WebSocket
+              | MQTT WebSocket
               | wss://broker.hivemq.com:8884/mqtt
               |
-+-------------+---------------+
-|       Web Dashboard         |
-|-----------------------------|
-| index(3).html               |
-| MQTT.js                     |
-| Real-time monitoring        |
-| Manual control              |
-| Smart mode selection        |
-+-----------------------------+
++-------------+-------------+
+|      Web Dashboard        |
+|---------------------------|
+| index.html                |
+| HTML/CSS/JavaScript       |
+| MQTT.js                   |
++---------------------------+
 ```
 
 ---
 
-## 4. Layer-by-Layer Explanation
+## 5. ESP32 Layer
 
-## 4.1 Sensor Layer
-
-The sensor layer collects environmental data from the room.
-
-| Sensor | Purpose |
-|---|---|
-| DHT11 | Reads temperature and humidity |
-| LDR | Measures light level |
-| PIR Sensor | Detects motion |
-| MQ-2 Sensor | Detects gas or smoke level |
-| Water Level Sensor | Measures water tank level |
-| Potentiometer | Provides manual analog input |
-
-These sensors are connected directly to the ESP32 pins. The ESP32 reads their values repeatedly in the `loop()` function.
-
----
-
-## 4.2 ESP32 Controller Layer
-
-The ESP32 is the brain of the project. It performs five main jobs:
-
-1. Connects to WiFi
-2. Connects to MQTT broker
-3. Reads sensor values
-4. Controls output devices
-5. Sends and receives MQTT messages
-
-The ESP32 code is written in Arduino C++ in:
+Main file:
 
 ```text
-IOT_project(1).ino
+IOT_project.ino
 ```
 
-The ESP32 publishes sensor data every **2.5 seconds** using this timing logic:
+The ESP32 is responsible for:
 
-```cpp
-if (millis() - lastPublish >= 2500) {
-    lastPublish = millis();
-}
-```
-
-This prevents the ESP32 from sending data too fast and keeps the system stable.
+- Connecting to WiFi
+- Connecting to MQTT broker
+- Reading sensor data
+- Publishing sensor data
+- Receiving dashboard commands
+- Controlling output devices
+- Applying smart modes
+- Running emergency logic
+- Updating the LCD display
 
 ---
 
-## 4.3 MQTT Broker Layer
+## 6. Web Dashboard Layer
 
-The MQTT broker works as the middle communication server.
+Main file:
 
-The broker used in this project is:
+```text
+index.html
+```
+
+The dashboard is responsible for:
+
+- Connecting to MQTT using WebSocket
+- Showing live sensor values
+- Sending control commands
+- Changing smart modes
+- Saving custom mood settings
+- Showing alerts
+- Allowing device ID configuration
+
+The dashboard uses:
+
+```html
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+```
+
+---
+
+## 7. MQTT Broker Layer
+
+Broker used:
 
 ```text
 broker.hivemq.com
 ```
 
-The ESP32 connects to the broker using normal MQTT:
+The ESP32 connects using:
 
 ```text
-Port: 1883
+MQTT TCP port 1883
 ```
 
-The web dashboard connects to the same broker using MQTT over WebSocket:
+The browser dashboard connects using:
 
 ```text
-wss://broker.hivemq.com:8884/mqtt
+MQTT WebSocket wss://broker.hivemq.com:8884/mqtt
 ```
 
-This is important because a browser cannot normally use raw MQTT TCP directly. The browser needs WebSocket, so the dashboard uses MQTT.js to communicate through WebSocket.
+The broker allows both devices to communicate even though they use different connection types.
+
+```text
+ESP32 MQTT TCP → HiveMQ Broker ← Browser MQTT WebSocket
+```
 
 ---
 
-## 4.4 Web Dashboard Layer
-
-The web dashboard is written in:
-
-```text
-index(3).html
-```
-
-It includes:
-
-- HTML for page structure
-- CSS for mobile app design
-- JavaScript for MQTT and control logic
-- MQTT.js for WebSocket MQTT connection
-
-The dashboard has four main pages:
-
-| Page | Purpose |
-|---|---|
-| Home | Shows live sensor values and output status |
-| Control | Allows manual control of devices |
-| Mood | Allows custom mood creation |
-| Settings | Allows MQTT broker and device ID setup |
-
----
-
-## 5. Data Flow Explanation
-
-## 5.1 Sensor Data Flow
-
-```text
-Sensor → ESP32 analog/digital read → MQTT publish → Broker → Dashboard subscribe → UI update
-```
-
-Example using temperature:
-
-1. DHT11 measures temperature.
-2. ESP32 reads temperature.
-3. ESP32 publishes the value to:
-
-```text
-ctrlhome/B6737115/temperature
-```
-
-4. MQTT broker receives the value.
-5. Dashboard subscribes to the topic.
-6. Dashboard updates the temperature card.
-
----
-
-## 5.2 Control Command Flow
-
-```text
-Dashboard button → MQTT publish → Broker → ESP32 subscribe → Hardware output changes
-```
-
-Example using fan control:
-
-1. User presses **High** fan button on dashboard.
-2. Dashboard publishes:
-
-```text
-Topic: ctrlhome/B6737115/fan/control
-Message: high
-```
-
-3. MQTT broker forwards the command.
-4. ESP32 receives the command in the callback function.
-5. ESP32 changes fan PWM to high speed.
-6. ESP32 publishes the new fan status back to the dashboard.
-
----
-
-## 6. MQTT Topic Architecture
-
-The project uses a topic structure based on the device ID.
+## 8. MQTT Topic Design
 
 Default device ID:
 
@@ -242,249 +188,184 @@ Base topic:
 ctrlhome/B6737115
 ```
 
-This means all topics begin with:
+All MQTT topics are created using this base topic.
+
+---
+
+## 9. Sensor Data Topics
 
 ```text
-ctrlhome/B6737115/
+ctrlhome/B6737115/temperature
+ctrlhome/B6737115/humidity
+ctrlhome/B6737115/light
+ctrlhome/B6737115/motion
+ctrlhome/B6737115/gas
+ctrlhome/B6737115/water
+ctrlhome/B6737115/potentiometer
+ctrlhome/B6737115/alert
+ctrlhome/B6737115/currentmode
+```
+
+Example data flow:
+
+```text
+DHT11 → ESP32 → ctrlhome/B6737115/temperature → Dashboard
 ```
 
 ---
 
-## 6.1 Sensor Topics
+## 10. Control Command Topics
 
-These topics are published by the ESP32 and received by the dashboard.
+```text
+ctrlhome/B6737115/mode
+ctrlhome/B6737115/light/control
+ctrlhome/B6737115/fan/control
+ctrlhome/B6737115/curtain/control
+ctrlhome/B6737115/alarm/control
+```
 
-| Topic | Data Type | Example |
-|---|---|---|
-| `ctrlhome/B6737115/temperature` | Float | `28.50` |
-| `ctrlhome/B6737115/humidity` | Float | `65.00` |
-| `ctrlhome/B6737115/light` | Integer | `900` |
-| `ctrlhome/B6737115/motion` | Text | `Motion Detected` |
-| `ctrlhome/B6737115/gas` | Integer | `1500` |
-| `ctrlhome/B6737115/water` | Text | `Tank Medium (55% filled)` |
-| `ctrlhome/B6737115/potentiometer` | Integer | `2048` |
-| `ctrlhome/B6737115/alert` | Text | `All sensors normal` |
-| `ctrlhome/B6737115/currentmode` | Text | `manual` |
+Example control flow:
 
----
-
-## 6.2 Control Topics
-
-These topics are published by the dashboard and received by the ESP32.
-
-| Topic | Message Example | Function |
-|---|---|---|
-| `ctrlhome/B6737115/mode` | `study` | Change smart mode |
-| `ctrlhome/B6737115/light/control` | `180` | Set light brightness |
-| `ctrlhome/B6737115/fan/control` | `medium` | Set fan speed |
-| `ctrlhome/B6737115/curtain/control` | `90` | Set curtain angle |
-| `ctrlhome/B6737115/alarm/control` | `ON` | Turn alarm on |
+```text
+Dashboard Fan Button → ctrlhome/B6737115/fan/control → ESP32 → Fan Output
+```
 
 ---
 
-## 6.3 Custom Mood Topics
+## 11. Output Status Topics
 
-These topics allow the dashboard to send custom mood settings.
+```text
+ctrlhome/B6737115/status/light
+ctrlhome/B6737115/status/fan
+ctrlhome/B6737115/status/curtain
+ctrlhome/B6737115/status/rgb
+ctrlhome/B6737115/status/alarm
+```
 
-| Topic | Example |
-|---|---|
-| `ctrlhome/B6737115/custom/brightness` | `150` |
-| `ctrlhome/B6737115/custom/rgb` | `255,0,255` |
-| `ctrlhome/B6737115/custom/fan` | `low` |
-| `ctrlhome/B6737115/custom/curtain` | `90` |
-| `ctrlhome/B6737115/custom/alarm` | `ON` |
-| `ctrlhome/B6737115/custom/temp` | `25` |
-
----
-
-## 6.4 Status Topics
-
-The ESP32 publishes output status back to the dashboard.
-
-| Topic | Meaning |
-|---|---|
-| `ctrlhome/B6737115/status/light` | Current light brightness |
-| `ctrlhome/B6737115/status/fan` | Current fan PWM |
-| `ctrlhome/B6737115/status/curtain` | Current curtain angle |
-| `ctrlhome/B6737115/status/rgb` | Mood LED status |
-| `ctrlhome/B6737115/status/alarm` | Alarm ON/OFF |
+These topics allow the ESP32 to confirm output states back to the dashboard.
 
 ---
 
-## 7. Hardware Architecture
+## 12. Hardware Architecture
 
-## 7.1 Input Pins
+### Sensor Inputs
 
-| Component | Pin | Type |
-|---|---:|---|
-| DHT11 | GPIO 4 | Digital |
-| LDR | GPIO 34 | Analog input |
-| PIR | GPIO 27 | Digital |
-| MQ-2 | GPIO 35 | Analog input |
-| Water sensor | GPIO 32 | Analog input |
-| Potentiometer | GPIO 39 | Analog input |
+| Component | ESP32 Pin |
+|---|---:|
+| DHT11 | GPIO 4 |
+| LDR | GPIO 34 |
+| PIR Sensor | GPIO 27 |
+| MQ-2 Gas Sensor | GPIO 35 |
+| Water Level Sensor | GPIO 32 |
+| Potentiometer | GPIO 39 |
 
-GPIO 34, 35, and 39 are input-only pins on ESP32, so they are suitable for analog sensors.
+### Output Devices
 
----
+| Component | ESP32 Pin |
+|---|---:|
+| Main Light | GPIO 14 |
+| Fan | GPIO 26 |
+| Buzzer | GPIO 25 |
+| Servo Curtain | GPIO 13 |
+| Red LED | GPIO 16 |
+| Green LED | GPIO 17 |
+| Yellow LED | GPIO 15 |
 
-## 7.2 Output Pins
-
-| Component | Pin | Type |
-|---|---:|---|
-| Main light | GPIO 14 | PWM output |
-| Fan | GPIO 26 | PWM output |
-| Buzzer | GPIO 25 | Digital output |
-| Servo curtain | GPIO 13 | Servo PWM |
-| Red LED | GPIO 16 | PWM output |
-| Green LED | GPIO 17 | PWM output |
-| Yellow LED | GPIO 15 | PWM output |
-
----
-
-## 7.3 LCD Pins
+### LCD
 
 | LCD Signal | ESP32 Pin |
 |---|---:|
 | SDA | GPIO 21 |
 | SCL | GPIO 22 |
 
-The LCD is used to show system messages such as:
-
-- Startup message
-- Current mode
-- Notifications
-- Alerts
-
 ---
 
-## 8. Smart Mode Architecture
+## 13. Smart Mode Logic
 
-The smart mode system is controlled using the function:
+The project supports these smart modes:
 
-```cpp
-applyMode(String mode)
-```
-
-When the dashboard sends a mode name, the ESP32 applies a group of output settings.
-
-| Mode | Light | Fan | Curtain | LEDs | Alarm |
-|---|---:|---|---:|---|---|
-| Sleep | 0 | Low | 0° | Yellow | Off |
-| Study | 255 | Medium | 140° | Red + Green + Yellow | Off |
-| Relax | 100 | Low | 60° | Green + Yellow | Off |
-| Away | 0 | Off | 0° | Off | Off |
-| Energy | 60 | Low | 140° | Green | Off |
-| Emergency | 255 | High | 180° | Blinking Red | On |
-| Comfort | Custom | Custom | Custom | Custom | Custom |
-
----
-
-## 9. Safety Architecture
-
-The safety system is checked in:
-
-```cpp
-checkEmergencyLogic()
-```
-
-The project uses these threshold values:
-
-```cpp
-TEMP_HIGH_C = 35
-HUMIDITY_HIGH_PERCENT = 80
-GAS_HIGH_VALUE = 2000
-WATER_FULL_PERCENT = 90
-```
-
-### Safety Conditions
-
-| Condition | Result |
+| Mode | Function |
 |---|---|
-| Gas value above 2000 | Emergency Mode |
-| Water tank 90% or more | Alert notification |
-| Temperature 35°C or more | Alert notification |
-| Humidity 80% or more | Alert notification |
-| Motion detected in Away Mode | Emergency Mode |
-| Motion detected in Comfort Mode with alarm enabled | Emergency Mode |
+| Manual | Direct user control |
+| Sleep | Quiet and dim room setup |
+| Study | Bright room setup |
+| Relax | Soft comfort setup |
+| Away | Security monitoring |
+| Energy | Reduced energy usage |
+| Emergency | Safety alert mode |
+| Comfort | Custom user mood |
 
 ---
 
-## 10. Emergency Mode Architecture
+## 14. Emergency Logic
 
-Emergency Mode is the strongest safety action in the system.
+Emergency mode can be triggered by:
 
-When activated:
+- High gas value
+- Motion detected in Away Mode
+- Motion detected while custom alarm monitoring is enabled
+
+Emergency behavior:
 
 ```text
-Light → 255
+Light → Full brightness
 Fan → High
-Curtain → 180°
-Alarm → ON
+Curtain → Open
+Buzzer → ON
 Red LED → Blinking
-Alert → EMERGENCY MODE
-```
-
-The red LED blinking is controlled every 500 ms:
-
-```cpp
-if (millis() - lastEmergencyBlink >= 500)
+Dashboard → Alert message
+LCD → Emergency message
 ```
 
 ---
 
-## 11. WebSocket Explanation
+## 15. Why WebSocket Is Used
 
-The dashboard runs inside a browser. A browser cannot directly use the normal MQTT TCP connection on port `1883`.
+The ESP32 can connect to MQTT directly using TCP port `1883`.
 
-Because of this, the project uses **MQTT over WebSocket**.
-
-The dashboard connects to:
-
-```text
-wss://broker.hivemq.com:8884/mqtt
-```
-
-The ESP32 connects to:
+However, a browser cannot normally connect using raw MQTT TCP.  
+Because of this, the dashboard uses **MQTT over WebSocket**.
 
 ```text
-broker.hivemq.com:1883
+ESP32: MQTT TCP
+Browser: MQTT WebSocket
+Broker: Routes both sides
 ```
 
-Both are connected to the same broker, so they can still communicate through the same MQTT topics.
-
-```text
-ESP32 MQTT TCP → Broker ← Browser MQTT WebSocket
-```
-
-This allows the user to control the ESP32 from a phone or laptop browser.
+This lets the web dashboard control the ESP32 from a phone or laptop browser.
 
 ---
 
-## 12. Why This Architecture Is Useful
+## 16. Image Assets Used
 
-This architecture is good for an IoT project because:
+### Project Flowchart
 
-- It separates hardware control and user interface.
-- MQTT is lightweight and suitable for IoT.
-- The dashboard can be accessed from phone or computer.
-- Sensor data updates in real time.
-- Control commands are sent instantly.
-- The project supports both manual control and automation.
-- The system can react to dangerous conditions automatically.
+```md
+![Existing Flowchart](../assets/existing-flowchart.png)
+```
+
+### Project Scoring Breakdown
+
+```md
+![Project Scoring Breakdown](../assets/project-scoring-breakdown.png)
+```
+
+### Dashboard Screenshot
+
+```md
+![Ctrl+Home Dashboard](../screenshots/ctrlhome-demo-home.png)
+```
 
 ---
 
-## 13. Summary
+## 17. Summary
 
-The Ctrl+Home architecture combines hardware, software, and network communication into one complete IoT system.
+The Ctrl+Home architecture demonstrates the main parts of an IoT system:
 
-The ESP32 handles the physical world by reading sensors and controlling outputs.  
+```text
+Sensing + Connectivity + Control + Automation + User Interface
+```
+
+The ESP32 handles the hardware side.  
 The MQTT broker handles communication.  
-The web dashboard gives the user a clean interface for monitoring and control.
-
-Overall, the system demonstrates the main concepts of IoT:
-
-```text
-Sensing + Connectivity + Control + Automation
-```
+The web dashboard provides remote monitoring and control.
