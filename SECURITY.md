@@ -1,38 +1,5 @@
 # Security Policy
 
-## Project
-
-**Ctrl+Home — ESP32 Smart Home IoT Dashboard**
-
-This document explains what should be checked before uploading this project to GitHub.
-
-Project structure:
-
-```text
-Ctrl-Home/
-│
-├── assets/
-│   ├── existing-flowchart.png
-│   └── project-scoring-breakdown.png
-│
-├── diagrams/
-│   └── IoT-diagram.png
-│
-├── report/
-│   ├── Architecture_Explanation.md
-│   └── Smart_Home_IoT_Final_Report.md
-│
-├── screenshots/
-│   └── ctrlhome-demo-home.png
-│
-├── IOT_project.ino
-├── README.md
-├── SECURITY.md
-└── index.html
-```
-
----
-
 ## 1. Important Warning
 
 This project is for **education and demonstration**.
@@ -192,13 +159,7 @@ Do not put secrets in:
 
 ## 8. Screenshot Safety
 
-Before uploading files in:
-
-```text
-screenshots/
-```
-
-check that screenshots do not show:
+Before uploading screenshots, check that they do not show:
 
 - WiFi password
 - Personal messages
@@ -240,7 +201,7 @@ Before pushing to GitHub:
 - [ ] `.gitignore` exists
 - [ ] Public broker is clearly described as testing only
 - [ ] `README.md` explains project usage
-- [ ] `report/` files do not contain private data
+- [ ] Report files do not contain private data
 
 ---
 
