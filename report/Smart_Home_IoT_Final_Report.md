@@ -8,147 +8,141 @@
 
 ## 1. Background and Significance
 
-The Internet of Things, or IoT, is a technology concept where physical devices are connected to the internet so they can collect data, communicate, and be controlled remotely. IoT is commonly used in smart homes, smart cities, agriculture, healthcare, factories, and transportation.
+The Internet of Things, or IoT, allows physical devices to connect to the internet, collect data, communicate, and be controlled remotely. IoT is widely used in smart homes, smart cities, healthcare, agriculture, and industrial automation.
 
-A smart home system is one of the most practical examples of IoT. It allows users to monitor their home environment and control devices such as lights, fans, alarms, and curtains using a smartphone or web dashboard. This improves comfort, safety, and energy efficiency.
+A smart home system is a practical example of IoT because it allows users to monitor and control their home environment. Users can check temperature, humidity, light, motion, gas, and water level. They can also control lights, fans, alarms, and curtains from a smartphone or computer.
 
-The **Ctrl+Home** project was developed as a smart home IoT system using an ESP32 microcontroller, sensors, MQTT communication, and a web dashboard. The system can monitor temperature, humidity, light level, motion, gas, water tank level, and potentiometer value. It can also control outputs such as a main light, fan, curtain servo, buzzer alarm, and mood LEDs.
-
-This project is significant because it combines two important IoT requirements:
-
-1. **Remote connectivity** — the user can monitor and control the system from a web dashboard.
-2. **Autonomous intelligence** — the system can make automatic decisions based on sensor data.
+The **Ctrl+Home** project was created as a smart home IoT system using ESP32, sensors, MQTT, and a web dashboard. The system supports both remote control and autonomous intelligence.
 
 ---
 
 ## 2. Objectives
 
-The main objectives of this project are:
+The objectives of this project are:
 
-- To design and build a smart home IoT system using ESP32.
-- To monitor sensor data in real time using a web dashboard.
-- To communicate between ESP32 and the dashboard using MQTT.
-- To control home devices remotely from a browser.
+- To build an IoT smart home system using ESP32.
+- To monitor sensor values in real time.
+- To control smart home outputs from a web dashboard.
+- To use MQTT for communication between ESP32 and dashboard.
 - To create smart modes for different room situations.
-- To implement safety alerts for gas, temperature, humidity, water level, and motion.
-- To demonstrate autonomous decision-making using sensor values.
-- To improve understanding of IoT system architecture, MQTT, ESP32 programming, and web dashboard design.
+- To detect unsafe conditions such as gas danger or motion in Away Mode.
+- To display local messages using an I2C LCD.
+- To create a clean and mobile-friendly web interface.
 
 ---
 
 ## 3. Scope of the Project
 
-This project focuses on a small-scale smart home room controller.
-
-### Included in the project
+### Included
 
 - ESP32 WiFi connection
 - MQTT communication
-- Web dashboard interface
-- Real-time sensor monitoring
-- Manual device control
-- Smart mode selection
-- Custom mood setting
-- Safety alert logic
-- LCD notification
-- Remote access through MQTT broker
+- Sensor monitoring
+- Web dashboard
+- Manual control
+- Smart modes
+- Custom mood settings
+- Emergency mode
+- LCD display
+- GitHub-ready project structure
 
-### Not included in the project
+### Not Included
 
-- User login system
-- Cloud database storage
-- Long-term data history
-- Real physical home appliance wiring
-- Mobile application package
-- Private MQTT server security
-
-The system is mainly designed for educational and demonstration purposes.
+- User login
+- Cloud database
+- Sensor history charts
+- Private MQTT broker
+- Real high-voltage appliance installation
+- Mobile app package
 
 ---
 
 ## 4. Hardware Components
 
-| Component | Quantity | Purpose |
-|---|---:|---|
-| ESP32 | 1 | Main controller |
-| DHT11 | 1 | Temperature and humidity sensing |
-| LDR | 1 | Light level sensing |
-| PIR Sensor | 1 | Motion detection |
-| MQ-2 Sensor | 1 | Gas and smoke detection |
-| Water Level Sensor | 1 | Water tank level sensing |
-| Potentiometer | 1 | Manual analog input |
-| Servo Motor | 1 | Curtain movement |
-| Buzzer | 1 | Alarm output |
-| Red LED | 1 | Mood/emergency light |
-| Green LED | 1 | Mood light |
-| Yellow LED | 1 | Mood light |
-| I2C LCD 16x2 | 1 | Local status display |
-| Breadboard | 1 | Circuit connection |
-| Jumper wires | Several | Wiring |
+| Component | Purpose |
+|---|---|
+| ESP32 | Main IoT controller |
+| DHT11 | Temperature and humidity |
+| LDR | Light detection |
+| PIR Sensor | Motion detection |
+| MQ-2 Sensor | Gas / smoke detection |
+| Water Level Sensor | Water tank monitoring |
+| Potentiometer | Manual analog input |
+| Servo Motor | Curtain control |
+| Buzzer | Alarm output |
+| Red LED | Emergency / mood LED |
+| Green LED | Mood LED |
+| Yellow LED | Mood LED |
+| I2C LCD 16x2 | Local display |
 
 ---
 
-## 5. Software and Tools
+## 5. Software and Technologies
 
-| Software / Tool | Purpose |
+| Technology | Purpose |
 |---|---|
-| Arduino IDE | Programming ESP32 |
+| Arduino IDE | ESP32 programming |
 | HTML | Dashboard structure |
 | CSS | Dashboard design |
 | JavaScript | Dashboard logic |
-| MQTT.js | MQTT WebSocket communication |
-| HiveMQ Broker | MQTT message broker |
-| Browser | Runs the web dashboard |
-
-### Arduino Libraries
-
-The ESP32 code uses these libraries:
-
-```cpp
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include "DHT.h"
-#include <ESP32Servo.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-```
+| MQTT.js | MQTT WebSocket connection |
+| PubSubClient | ESP32 MQTT communication |
+| HiveMQ Broker | Public MQTT broker for testing |
 
 ---
 
 ## 6. System Architecture
-
-The system uses MQTT publish/subscribe communication.
 
 ```text
 Sensors → ESP32 → MQTT Broker → Web Dashboard
 Web Dashboard → MQTT Broker → ESP32 → Output Devices
 ```
 
-The ESP32 connects to WiFi and communicates with the MQTT broker. It publishes sensor values and subscribes to command topics. The web dashboard connects to the same MQTT broker using MQTT over WebSocket.
-
-### MQTT Broker
-
-```text
-broker.hivemq.com
-```
-
-### ESP32 MQTT Port
-
-```text
-1883
-```
-
-### Web Dashboard MQTT WebSocket URL
-
-```text
-wss://broker.hivemq.com:8884/mqtt
-```
+The ESP32 publishes sensor values to the MQTT broker.  
+The dashboard subscribes to those topics and displays the values.  
+The dashboard also publishes commands that the ESP32 receives and executes.
 
 ---
 
-## 7. Pin Configuration
+## 7. Methodology
 
-### Sensor Pins
+### Step 1: Hardware Connection
+
+Sensors and output devices were connected to the ESP32 using the assigned GPIO pins.
+
+### Step 2: ESP32 Programming
+
+The ESP32 was programmed in Arduino IDE. The code handles WiFi, MQTT, sensors, outputs, LCD, smart modes, and emergency logic.
+
+### Step 3: MQTT Topic Design
+
+A base topic was created:
+
+```text
+ctrlhome/B6737115
+```
+
+All sensor and control topics are based on this structure.
+
+### Step 4: Dashboard Development
+
+The dashboard was developed in:
+
+```text
+index.html
+```
+
+It uses HTML, CSS, JavaScript, and MQTT.js.
+
+### Step 5: Testing
+
+Testing was done by checking sensor values, dashboard updates, MQTT commands, output responses, and emergency mode behavior.
+
+---
+
+## 8. Pin Configuration
+
+### Sensors
 
 | Sensor | ESP32 Pin |
 |---|---:|
@@ -159,19 +153,19 @@ wss://broker.hivemq.com:8884/mqtt
 | Water Level Sensor | GPIO 32 |
 | Potentiometer | GPIO 39 |
 
-### Output Pins
+### Outputs
 
 | Output | ESP32 Pin |
 |---|---:|
 | Main Light | GPIO 14 |
 | Fan | GPIO 26 |
 | Buzzer | GPIO 25 |
-| Curtain Servo | GPIO 13 |
+| Servo Curtain | GPIO 13 |
 | Red LED | GPIO 16 |
 | Green LED | GPIO 17 |
 | Yellow LED | GPIO 15 |
 
-### LCD Pins
+### LCD
 
 | LCD Signal | ESP32 Pin |
 |---|---:|
@@ -180,125 +174,120 @@ wss://broker.hivemq.com:8884/mqtt
 
 ---
 
-## 8. Methodology
+## 9. MQTT Configuration
 
-The project was developed using the following steps.
+### ESP32 MQTT
 
-### Step 1: Hardware Setup
+```text
+Broker: broker.hivemq.com
+Port: 1883
+```
 
-The sensors and output devices were connected to the ESP32 according to the pin configuration. Analog sensors were connected to ESP32 analog input pins, and output devices were connected to PWM or digital pins.
+### Web Dashboard MQTT
 
-### Step 2: ESP32 Programming
+```text
+Broker URL: wss://broker.hivemq.com:8884/mqtt
+```
 
-The ESP32 was programmed using Arduino IDE. The code handles:
+### Device ID
 
-- WiFi connection
-- MQTT connection
-- Sensor reading
-- MQTT publishing
-- MQTT subscription
-- Output control
-- Smart mode logic
-- Safety logic
-- LCD messages
+```text
+B6737115
+```
 
-### Step 3: MQTT Topic Design
-
-A topic structure was created using the base topic:
+### Base Topic
 
 ```text
 ctrlhome/B6737115
 ```
 
-This keeps the project organized and allows the dashboard and ESP32 to communicate clearly.
-
-### Step 4: Web Dashboard Development
-
-The web dashboard was created in one HTML file:
-
-```text
-index(3).html
-```
-
-The dashboard includes four pages:
-
-- Home
-- Control
-- Mood
-- Settings
-
-The dashboard connects to MQTT using MQTT.js over WebSocket.
-
-### Step 5: Testing
-
-The system was tested by checking:
-
-- Sensor values on Serial Monitor
-- Sensor values on the web dashboard
-- MQTT publishing and subscribing
-- Manual controls
-- Smart modes
-- Emergency safety logic
-- LCD notification messages
-
 ---
 
-## 9. MQTT Topics
+## 10. MQTT Topics
 
 ### Sensor Topics
 
-| Topic | Description |
-|---|---|
-| `ctrlhome/B6737115/temperature` | Temperature value |
-| `ctrlhome/B6737115/humidity` | Humidity value |
-| `ctrlhome/B6737115/light` | LDR value |
-| `ctrlhome/B6737115/motion` | Motion status |
-| `ctrlhome/B6737115/gas` | Gas value |
-| `ctrlhome/B6737115/water` | Water tank status |
-| `ctrlhome/B6737115/potentiometer` | Potentiometer value |
-| `ctrlhome/B6737115/alert` | Alert message |
-| `ctrlhome/B6737115/currentmode` | Current mode |
+```text
+ctrlhome/B6737115/temperature
+ctrlhome/B6737115/humidity
+ctrlhome/B6737115/light
+ctrlhome/B6737115/motion
+ctrlhome/B6737115/gas
+ctrlhome/B6737115/water
+ctrlhome/B6737115/potentiometer
+ctrlhome/B6737115/alert
+ctrlhome/B6737115/currentmode
+```
 
 ### Control Topics
 
-| Topic | Description |
-|---|---|
-| `ctrlhome/B6737115/mode` | Smart mode command |
-| `ctrlhome/B6737115/light/control` | Light brightness command |
-| `ctrlhome/B6737115/fan/control` | Fan speed command |
-| `ctrlhome/B6737115/curtain/control` | Curtain angle command |
-| `ctrlhome/B6737115/alarm/control` | Alarm command |
-
-### Status Topics
-
-| Topic | Description |
-|---|---|
-| `ctrlhome/B6737115/status/light` | Current light status |
-| `ctrlhome/B6737115/status/fan` | Current fan status |
-| `ctrlhome/B6737115/status/curtain` | Current curtain position |
-| `ctrlhome/B6737115/status/rgb` | Current LED status |
-| `ctrlhome/B6737115/status/alarm` | Current alarm status |
+```text
+ctrlhome/B6737115/mode
+ctrlhome/B6737115/light/control
+ctrlhome/B6737115/fan/control
+ctrlhome/B6737115/curtain/control
+ctrlhome/B6737115/alarm/control
+```
 
 ---
 
-## 10. Web Dashboard Description
+## 11. Dashboard Design
 
-The dashboard is designed as a mobile-friendly smart home controller.
+The dashboard has four main pages.
 
-### Home Page
+| Page | Function |
+|---|---|
+| Home | Shows live data and system status |
+| Control | Controls light, fan, curtain, LEDs, and alarm |
+| Mood | Creates custom room mood |
+| Settings | Configures MQTT, device ID, notification, and theme |
 
-The Home page shows:
+---
 
-- Current mode
-- Temperature
-- Humidity
-- Alert message
-- Live readings
-- Output status
+## 12. Smart Modes
 
-### Control Page
+| Mode | Description |
+|---|---|
+| Manual | User controls outputs manually |
+| Sleep | Quiet room mode |
+| Study | Bright room mode |
+| Relax | Soft comfort mode |
+| Away | Security monitoring mode |
+| Energy | Power saving mode |
+| Emergency | Safety alert mode |
+| Comfort | Custom mood mode |
 
-The Control page allows manual control of:
+---
+
+## 13. Autonomous Intelligence
+
+The system can make automatic decisions from sensor readings.
+
+| Condition | Automatic Response |
+|---|---|
+| High gas value | Activates Emergency Mode |
+| Motion detected in Away Mode | Activates Emergency Mode |
+| High temperature | Sends alert |
+| High humidity | Sends alert |
+| Full water tank | Sends alert |
+| No motion in Energy Mode | Saves power |
+| Motion in Sleep Mode | Adjusts room condition |
+
+---
+
+## 14. Results and Testing
+
+### Sensor Monitoring
+
+The dashboard successfully displayed live values from the ESP32.
+
+### MQTT Communication
+
+The ESP32 and dashboard successfully communicated using the same MQTT topics.
+
+### Manual Control
+
+The dashboard successfully controlled:
 
 - Main light
 - Fan
@@ -306,145 +295,25 @@ The Control page allows manual control of:
 - Mood LEDs
 - Alarm
 
-### Mood Page
+### Smart Modes
 
-The Mood page allows the user to create a custom mood using:
+Smart modes successfully changed multiple outputs using one command.
 
-- Brightness
-- LED colors
-- Fan speed
-- Curtain position
-- Preferred temperature
-- Alarm monitoring
+### Emergency Mode
 
-### Settings Page
-
-The Settings page allows the user to change:
-
-- MQTT broker URL
-- Device ID
-- Notification setting
-- Theme setting
-
----
-
-## 11. Smart Mode Functions
-
-The project includes several smart modes.
-
-| Mode | Description |
-|---|---|
-| Sleep | Turns off main light, uses low fan, closes curtain, and uses yellow LED |
-| Study | Sets bright light, medium fan, opens curtain, and turns on all mood LEDs |
-| Relax | Uses soft light, low fan, medium curtain position, and green/yellow LEDs |
-| Away | Turns off devices and waits for motion detection |
-| Energy | Saves power by reducing light and fan usage |
-| Emergency | Turns on alarm, full light, high fan, open curtain, and blinking red LED |
-| Comfort | Uses custom settings selected by the user |
-
----
-
-## 12. Autonomous Intelligence
-
-The autonomous intelligence of this project means the system can make decisions without the user pressing buttons.
-
-### Examples
-
-| Condition | Automatic Action |
-|---|---|
-| Gas value is too high | Activates Emergency Mode |
-| Motion detected in Away Mode | Activates Emergency Mode |
-| Temperature is too high | Sends alert |
-| Humidity is too high | Sends alert |
-| Water tank is full | Sends alert |
-| Energy Mode with no motion | Turns off light and fan |
-| Sleep Mode with motion | Turns on dim light |
-
-This makes the project more than just a remote control system. It can respond intelligently to the environment.
-
----
-
-## 13. Sensor Thresholds
-
-The project uses these threshold values:
-
-| Parameter | Threshold |
-|---|---:|
-| High temperature | 35°C |
-| High humidity | 80% |
-| High gas value | 2000 |
-| Full water tank | 90% |
-
----
-
-## 14. Results and Testing
-
-### Temperature and Humidity Test
-
-The DHT11 sensor successfully measured temperature and humidity. The values were published to MQTT and displayed on the dashboard.
-
-### Light Sensor Test
-
-The LDR sensor successfully detected light level changes. The dashboard converted the analog value into readable labels:
-
-- Bright
-- Dim
-- Dark
-
-### Gas Sensor Test
-
-The MQ-2 sensor value was displayed on the dashboard as:
-
-- Safe
-- Warning
-- Danger
-
-When the gas value exceeded the dangerous threshold, the ESP32 activated Emergency Mode.
-
-### Water Level Test
-
-The water sensor value was converted into percentage and shown as a water tank status. The dashboard displayed the tank level as a loading bar.
-
-### Potentiometer Test
-
-The potentiometer value was converted into a percentage on the dashboard. In Manual Mode, the potentiometer was used to control light brightness.
-
-### Manual Control Test
-
-The dashboard successfully sent MQTT commands to control:
-
-- Light brightness
-- Fan speed
-- Curtain angle
-- Alarm
-- Mood LEDs
-
-### Smart Mode Test
-
-Each smart mode successfully changed multiple outputs at the same time.
-
-### Emergency Mode Test
-
-Emergency Mode successfully:
-
-- Turned on the main light
-- Set fan to high
-- Opened curtain
-- Turned on buzzer
-- Blinked red LED
-- Sent emergency alert to dashboard and LCD
+Emergency Mode successfully activated the alarm behavior when unsafe conditions occurred.
 
 ---
 
 ## 15. Results Analysis
 
-The project successfully demonstrates a working IoT smart home system. The MQTT communication allowed real-time data transfer between ESP32 and the web dashboard. The dashboard made the project easier to use because the user can monitor and control the system from a phone or laptop browser.
+The project achieved its main goal of building a complete IoT smart home system. MQTT communication worked well because it allowed the ESP32 and dashboard to exchange data in real time.
 
-The smart mode system improved the project because one command can control multiple outputs. For example, Study Mode adjusts light, fan, curtain, and LEDs automatically. Emergency Mode is important because it shows how IoT can be used for safety.
+The dashboard improved usability because the system can be controlled from a phone or laptop. The smart modes made the system more practical because the user can change the whole room setup with one button.
 
-The system also shows the difference between remote connectivity and autonomous intelligence. Remote connectivity allows the user to control the device from the dashboard. Autonomous intelligence allows the ESP32 to react by itself when sensor values reach unsafe conditions.
+The safety system made the project stronger because the ESP32 can react automatically without waiting for user input. This shows autonomous intelligence, which is an important part of IoT.
 
-The main limitation is that the project uses a public MQTT broker. This is good for testing, but a real product should use a private broker with authentication for better security. Another limitation is that sensor values are not saved in a database, so the system does not show history charts.
+The main limitation is security. The project uses a public MQTT broker, which is good for testing but not recommended for real home deployment.
 
 ---
 
@@ -452,12 +321,11 @@ The main limitation is that the project uses a public MQTT broker. This is good 
 
 | Problem | Solution |
 |---|---|
-| Browser cannot connect to normal MQTT TCP | Used MQTT over WebSocket |
-| Need same topic names on ESP32 and dashboard | Used common base topic `ctrlhome/B6737115` |
-| Sensor values are difficult to understand | Converted raw values into labels such as Safe, Warning, Danger, Bright, Dim, Dark |
-| Too many controls can confuse user | Organized dashboard into Home, Control, Mood, and Settings pages |
-| Emergency alert must be noticeable | Used buzzer, blinking red LED, LCD, and dashboard alert |
-| Manual and automatic control can conflict | Control commands switch system back to Manual Mode |
+| Browser cannot use normal MQTT TCP | Used MQTT over WebSocket |
+| Raw sensor data is hard to understand | Converted values into labels and status |
+| Many controls can confuse users | Separated UI into Home, Control, Mood, and Settings pages |
+| Public MQTT broker is not secure | Added `SECURITY.md` warning and recommendations |
+| Emergency event needs attention | Added buzzer, red LED, LCD, and dashboard alert |
 
 ---
 
@@ -465,54 +333,48 @@ The main limitation is that the project uses a public MQTT broker. This is good 
 
 From this project, we learned how to:
 
-- Program ESP32 using Arduino IDE
-- Connect ESP32 to WiFi
-- Use MQTT publish and subscribe communication
-- Connect a web dashboard to MQTT using WebSocket
+- Program an ESP32
+- Use MQTT publish and subscribe
+- Connect a browser dashboard to MQTT using WebSocket
 - Read analog and digital sensors
-- Control PWM outputs
-- Control a servo motor
-- Display information on an I2C LCD
-- Create a mobile-friendly dashboard using HTML, CSS, and JavaScript
-- Build smart mode automation
-- Implement safety alert logic
+- Control outputs using ESP32
+- Use an I2C LCD
+- Design a mobile-friendly dashboard
+- Build smart automation logic
+- Create a GitHub project structure
+- Write project documentation
 
 ---
 
 ## 18. Future Improvements
 
-The project can be improved by adding:
-
-- User login system
-- Private MQTT broker
-- Sensor history database
-- Real-time charts
-- Push notifications
-- Cloud hosting
-- Node-RED dashboard integration
-- Mobile app version
-- Voice assistant control
-- Better enclosure for hardware
-- More sensors such as flame, sound, or dust sensor
+- Use private MQTT broker
+- Add MQTT username and password
+- Add TLS encryption
+- Add database storage
+- Add sensor history charts
+- Add user login
+- Add mobile app version
+- Add Node-RED dashboard
+- Add voice assistant control
+- Improve hardware enclosure
 
 ---
 
 ## 19. Conclusion
 
-The Ctrl+Home Smart Home IoT project successfully demonstrates a complete IoT system using ESP32, MQTT, sensors, output devices, and a web dashboard. The system can monitor environmental data in real time, allow remote control, and make automatic decisions based on sensor readings.
+The Ctrl+Home Smart Home IoT project successfully demonstrates a complete IoT system using ESP32, sensors, MQTT, and a web dashboard. The system can monitor sensor values, control outputs remotely, and respond automatically to unsafe conditions.
 
-The project meets the important requirements of an IoT system: sensing, connectivity, control, and automation. It also shows how IoT can improve home comfort, safety, and energy efficiency.
-
-Overall, Ctrl+Home is a practical educational project that combines hardware and software into one working smart home system.
+The project meets the important IoT concepts of sensing, communication, control, and automation. It is suitable as an educational smart home project and can be improved further for real-world use with better security and cloud storage.
 
 ---
 
 ## 20. References
 
 - ESP32 Arduino Core
-- PubSubClient MQTT Library
+- PubSubClient Library
 - MQTT.js Library
-- HiveMQ Public MQTT Broker
-- Arduino DHT Sensor Library
+- HiveMQ Public Broker
+- DHT Sensor Library
 - ESP32Servo Library
 - LiquidCrystal_I2C Library
