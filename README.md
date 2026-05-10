@@ -121,6 +121,12 @@ report/Architecture_Explanation.md
 
 ## Web Dashboard
 
+The web dashboard is hosted on GitHub Pages:
+
+```text
+https://blackdogg2.github.io/IOT/
+```
+
 Main dashboard file:
 
 ```text
@@ -261,13 +267,17 @@ Upload the code to the ESP32.
 
 ### 2. Open Dashboard
 
-Open:
+Open the hosted dashboard here:
+
+```text
+https://blackdogg2.github.io/IOT/
+```
+
+You can also open the local file directly in a browser:
 
 ```text
 index.html
 ```
-
-You can open it directly in a browser or publish it using GitHub Pages.
 
 ### 3. Connect MQTT
 
