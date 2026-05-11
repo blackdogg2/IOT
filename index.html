@@ -1068,33 +1068,6 @@
       font-weight: 800;
     }
 
-
-    body.phone-alarm-flash::before {
-      content: "EMERGENCY ALERT";
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: grid;
-      place-items: center;
-      background: rgba(220, 38, 38, 0.82);
-      color: white;
-      font-size: clamp(28px, 8vw, 56px);
-      font-weight: 950;
-      letter-spacing: -1px;
-      text-align: center;
-      animation: phoneAlarmFlash 0.45s linear infinite alternate;
-      pointer-events: none;
-    }
-
-    @keyframes phoneAlarmFlash {
-      from {
-        opacity: 0.25;
-      }
-      to {
-        opacity: 0.95;
-      }
-    }
-
   </style>
 
   <link id="appleIcon" rel="apple-touch-icon" href="data:image/svg+xml,<svg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27><rect%20width=%27100%27%20height=%27100%27%20rx=%2724%27%20fill=%27%23171923%27/><text%20x=%2750%27%20y=%2762%27%20text-anchor=%27middle%27%20font-family=%27Arial,sans-serif%27%20font-size=%2734%27%20font-weight=%27900%27%20fill=%27white%27>C+H</text><path%20d=%27M42%2062h16M50%2054v16%27%20stroke=%27%23dc2626%27%20stroke-width=%275%27%20stroke-linecap=%27round%27/></svg>">
@@ -1587,8 +1560,6 @@
     let ledState = { red: false, green: false, yellow: false };
     let moodLedState = { red: false, green: true, yellow: true };
     let notificationsEnabled = false;
-    let phoneAlarmTimer = null;
-    let audioContext = null;
     let selectedFan = "";
     let selectedAlarm = "";
     let lightPower = false;
@@ -1812,12 +1783,6 @@
         document.getElementById("statusAlarm").textContent = message;
         selectedAlarm = message;
         syncAlarmButtons();
-
-        if (String(message).toUpperCase() === "ON") {
-          triggerPhoneAlarm("Emergency alarm is ON");
-        } else {
-          stopPhoneAlarmFlash();
-        }
       }
     }
 
@@ -2077,12 +2042,6 @@
       selectedAlarm = value;
       syncAlarmButtons();
       publish(T.alarmControl, value);
-
-      if (String(value).toUpperCase() === "ON") {
-        triggerPhoneAlarm("Manual alarm activated");
-      } else {
-        stopPhoneAlarmFlash();
-      }
     }
 
     function syncAlarmButtons() {
@@ -2280,82 +2239,16 @@
     }
 
     function notifyPhone(message) {
-      if (!message || message === "All sensors normal") {
-        stopPhoneAlarmFlash();
-        return;
-      }
-
-      triggerPhoneAlarm(message);
-    }
-
-    function triggerPhoneAlarm(message) {
-      document.body.classList.add("phone-alarm-flash");
-
-      if (phoneAlarmTimer) clearTimeout(phoneAlarmTimer);
-      phoneAlarmTimer = setTimeout(stopPhoneAlarmFlash, 4500);
-
-      playAlarmSound();
+      if (!notificationsEnabled) return;
+      if (!message || message === "All sensors normal") return;
 
       if ("vibrate" in navigator) {
-        navigator.vibrate([220, 80, 220, 80, 420]);
+        navigator.vibrate([100, 50, 100]);
       }
 
-      if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
-        new Notification("Ctrl+Home Emergency", { body: message });
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Ctrl+Home", { body: message });
       }
-    }
-
-    function stopPhoneAlarmFlash() {
-      document.body.classList.remove("phone-alarm-flash");
-
-      if (phoneAlarmTimer) {
-        clearTimeout(phoneAlarmTimer);
-        phoneAlarmTimer = null;
-      }
-
-      if ("vibrate" in navigator) {
-        navigator.vibrate(0);
-      }
-    }
-
-    function unlockAlarmAudio() {
-      try {
-        if (!audioContext) {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        if (audioContext.state === "suspended") {
-          audioContext.resume();
-        }
-      } catch (error) {}
-    }
-
-    function playAlarmSound() {
-      try {
-        unlockAlarmAudio();
-
-        if (!audioContext) return;
-
-        const now = audioContext.currentTime;
-
-        for (let i = 0; i < 4; i++) {
-          const oscillator = audioContext.createOscillator();
-          const gain = audioContext.createGain();
-
-          oscillator.type = "square";
-          oscillator.frequency.setValueAtTime(i % 2 === 0 ? 880 : 660, now + i * 0.22);
-
-          gain.gain.setValueAtTime(0.0001, now + i * 0.22);
-          gain.gain.exponentialRampToValueAtTime(0.18, now + i * 0.22 + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.22 + 0.16);
-
-          oscillator.connect(gain);
-          gain.connect(audioContext.destination);
-
-          oscillator.start(now + i * 0.22);
-          oscillator.stop(now + i * 0.22 + 0.18);
-        }
-      } catch (error) {}
     }
 
     function setTheme(theme) {
@@ -2416,9 +2309,6 @@
       syncCurtainControl();
       syncAlarmButtons();
       updateModeDisplay("manual");
-
-      document.addEventListener("click", unlockAlarmAudio, { once: true });
-      document.addEventListener("touchstart", unlockAlarmAudio, { once: true });
 
       setTimeout(connectMQTT, 500);
     });
