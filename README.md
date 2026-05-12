@@ -231,19 +231,44 @@ ctrlhome/B6737115/alarm/control
 
 ---
 
-## Smart Modes
+## Smart Mode / Mood Logic
 
-| Mode | Description |
+Each smart mode is a preset group of output settings. Instead of controlling each device one by one, the user can press one mode button on the dashboard. The dashboard sends the selected mode to the ESP32 through MQTT, and the ESP32 applies the correct output behavior.
+
+| Mode | Logic / Behavior |
 |---|---|
-| Manual | User controls outputs manually |
-| Sleep | Dim/quiet room mode |
-| Study | Bright room setup for studying |
-| Relax | Soft light and comfort setup |
-| Away | Security monitoring mode |
-| Energy | Reduced power usage |
-| Emergency | Alarm, full light, high fan, and red warning LED |
-| Comfort | Custom mood mode |
+| **Manual Mode** | The user controls everything manually from the dashboard. Light, fan, curtain, alarm, and LEDs follow the button or slider commands. |
+| **Sleep Mode** | Makes the room quiet and dark. The main light turns off or becomes dim, the fan runs at low speed, the curtain closes, the alarm stays off, and the yellow LED can represent sleep mood. |
+| **Study Mode** | Makes the room bright for studying. The light becomes bright, the fan runs at medium speed, the curtain opens, and the LEDs show an active study environment. |
+| **Relax Mode** | Creates a comfortable room setting. The light becomes soft, the fan runs at low speed, the curtain moves to a medium position, and green/yellow LEDs show a calm mood. |
+| **Away Mode** | Works as a security mode. Most outputs are turned off, but the motion sensor is monitored. If motion is detected while Away Mode is active, the system automatically triggers Emergency Mode. |
+| **Energy Mode** | Saves power by reducing output usage. Light and fan use lower levels, and the system can reduce or turn off outputs when no motion is detected. |
+| **Emergency Mode** | Safety mode. It can be triggered by gas danger or motion in Away Mode. The light turns full, the fan goes high, the curtain opens, the alarm turns on, the red LED blinks, and the buzzer turns on and the red LED blinks. |
+| **Comfort / Custom Mood** | The user creates a custom room setup from the Mood page by choosing brightness, LED colors, fan speed, curtain position, preferred temperature, and alarm monitoring. |
 
+### Example: Study Mode
+
+```text
+Dashboard sends: study
+MQTT topic: ctrlhome/demo-device/mode
+ESP32 applies:
+- Light = bright
+- Fan = medium
+- Curtain = open
+- LEDs = active
+```
+
+### Example: Emergency Mode
+
+```text
+Sensor detects danger
+ESP32 changes mode to emergency
+Dashboard receives alert
+Buzzer turns on
+Red LED blinks
+Dashboard shows alert
+```
+---
 ---
 
 ## How to Run
